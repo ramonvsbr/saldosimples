@@ -327,10 +327,22 @@
     *{ transition: none !important; }
   }
 
+  /* Header topo (menu + título) */
+  .top-bar{
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+  .top-bar-title{ flex: 1 1 auto; min-width: 0; }
+  .top-bar-title h1{ margin: 0 0 4px; }
+  .top-bar-title .eyebrow{ margin: 2px 0 6px; }
+  .top-bar-title .sub{ margin: 0; }
+
   /* Menu hamburguer */
   .menu-btn{
-    position: fixed;
-    top: 18px; left: 18px;
+    position: relative;
+    flex: 0 0 auto;
     z-index: 40;
     width: 40px; height: 40px;
     border-radius: 10px;
@@ -372,7 +384,7 @@
     width: min(280px, 82vw);
     background: var(--sheet);
     box-shadow: 4px 0 18px rgba(34,50,44,0.14);
-    padding: 78px 18px 24px;
+    padding: 24px 18px 24px;
     transform: translateX(-100%);
     transition: transform 0.22s ease;
     display: flex;
@@ -532,10 +544,6 @@
 </style>
 </head>
 <body>
-  <button class="menu-btn" id="menuBtn" aria-label="Abrir menu" aria-expanded="false">
-    <span></span><span></span><span></span>
-  </button>
-
   <div class="nav-overlay" id="navOverlay">
     <nav class="nav-panel">
       <p class="nav-eyebrow">Navegar</p>
@@ -547,14 +555,29 @@
         <span class="nav-link-title">Anual</span>
         <span class="nav-link-sub">soma de gastos por ano</span>
       </button>
+      <p class="nav-eyebrow" style="margin-top:14px;">Dados</p>
+      <button class="nav-link" id="navExport">
+        <span class="nav-link-title">Exportar</span>
+        <span class="nav-link-sub">baixar backup em .json</span>
+      </button>
+      <button class="nav-link" id="navImport">
+        <span class="nav-link-title">Importar</span>
+        <span class="nav-link-sub">carregar backup em .json</span>
+      </button>
+      <input type="file" id="importFile" accept="application/json" style="display:none">
     </nav>
   </div>
 
   <div class="wrap" id="app">
-    <header>
-      <p class="eyebrow">Saldo Simples</p>
-      <h1>Controle mensal</h1>
-      <p class="sub">Despesas e receitas, mês a mês. Clique em qualquer campo para editar.</p>
+    <header class="top-bar">
+      <button class="menu-btn" id="menuBtn" aria-label="Abrir menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="top-bar-title">
+        <p class="eyebrow">Saldo Simples</p>
+        <h1 id="pageTitle">Controle mensal</h1>
+        <p class="sub" id="pageSub">Despesas e receitas, mês a mês. Clique em qualquer campo para editar.</p>
+      </div>
     </header>
 
     <div id="viewMensal">
@@ -618,11 +641,6 @@
     </div>
 
     <div id="viewAnual" style="display:none;">
-      <header class="anual-head">
-        <p class="eyebrow">Saldo Simples</p>
-        <h1>Resumo anual</h1>
-        <p class="sub">Total de despesas e receitas, separado por ano.</p>
-      </header>
       <div id="anualYears"></div>
       <div class="panel geral-panel">
         <div class="stat despesas">
@@ -985,26 +1003,92 @@
     if(e.target === navOverlay) closeMenu();
   });
 
+  var pageTitle = document.getElementById('pageTitle');
+  var pageSub = document.getElementById('pageSub');
+
   function showView(view){
-    var mainHeader = document.querySelector('.wrap > header');
     if(view === 'anual'){
-      if(mainHeader) mainHeader.style.display = 'none';
       viewMensal.style.display = 'none';
       viewAnual.style.display = 'block';
       navAnual.classList.add('active');
       navMensal.classList.remove('active');
+      pageTitle.textContent = 'Resumo anual';
+      pageSub.textContent = 'Total de despesas e receitas, separado por ano.';
       renderAnual();
     } else {
-      if(mainHeader) mainHeader.style.display = '';
       viewAnual.style.display = 'none';
       viewMensal.style.display = 'block';
       navMensal.classList.add('active');
       navAnual.classList.remove('active');
+      pageTitle.textContent = 'Controle mensal';
+      pageSub.textContent = 'Despesas e receitas, mês a mês. Clique em qualquer campo para editar.';
     }
     closeMenu();
   }
   navMensal.addEventListener('click', function(){ showView('mensal'); });
   navAnual.addEventListener('click', function(){ showView('anual'); });
+
+  var navExport = document.getElementById('navExport');
+  var navImport = document.getElementById('navImport');
+  var importFile = document.getElementById('importFile');
+
+  navExport.addEventListener('click', function(){
+    try{
+      var dataStr = JSON.stringify(state, null, 2);
+      var blob = new Blob([dataStr], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var now = new Date();
+      var pad = function(n){ return n < 10 ? '0'+n : ''+n; };
+      var stamp = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate());
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'saldo-simples-backup-' + stamp + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 500);
+    }catch(err){
+      alert('Não foi possível exportar os dados.');
+    }
+    closeMenu();
+  });
+
+  navImport.addEventListener('click', function(){
+    importFile.value = '';
+    importFile.click();
+  });
+
+  importFile.addEventListener('change', function(e){
+    var file = e.target.files && e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      try{
+        var parsed = JSON.parse(ev.target.result);
+        var valid = parsed && Array.isArray(parsed.months) && Array.isArray(parsed.expenses) && Array.isArray(parsed.income);
+        if(!valid){
+          alert('Arquivo inválido. Verifique se é um backup do Saldo Simples.');
+          return;
+        }
+        if(confirm('Isso vai substituir todos os dados atuais pelos dados do arquivo importado. Deseja continuar?')){
+          parsed.version = CURRENT_SCHEMA_VERSION;
+          if(!parsed.selectedMonth || parsed.months.indexOf(parsed.selectedMonth) === -1){
+            parsed.selectedMonth = parsed.months[0] || parsed.selectedMonth;
+          }
+          if(typeof parsed.nextId !== 'number' || isNaN(parsed.nextId)){
+            parsed.nextId = 1;
+          }
+          state = parsed;
+          persist();
+          render();
+          closeMenu();
+        }
+      }catch(err){
+        alert('Não foi possível ler o arquivo. Verifique se é um JSON válido.');
+      }
+    };
+    reader.readAsText(file);
+  });
 
   function renderAnual(){
     var container = document.getElementById('anualYears');
