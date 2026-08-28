@@ -6,6 +6,8 @@
 
   var MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
+  var currentUser = null;
+
   function getTodayMonthKey() {
     var now = new Date();
     var y = now.getFullYear();
@@ -30,7 +32,6 @@
       currentKey, "2026-09", "2026-10", "2026-11", "2026-12",
       "2027-01", "2027-02", "2027-03"
     ];
-    // Remove duplicatas se currentKey bater com algum já estático
     months = months.filter(function(v, i, a) { return a.indexOf(v) === i; }).sort();
 
     var expenses = [
@@ -99,9 +100,56 @@
 
   function flagSave(){
     var el = document.getElementById('saveFlag');
-    el.classList.add('show');
-    clearTimeout(el._t);
-    el._t = setTimeout(function(){ el.classList.remove('show'); }, 1100);
+    if(el) {
+      el.classList.add('show');
+      clearTimeout(el._t);
+      el._t = setTimeout(function(){ el.classList.remove('show'); }, 1100);
+    }
+  }
+
+  // INTEGRAÇÃO COM A NUVEM (CLOUDFLARE WORKERS / D1)
+  function saveToCloud() {
+    if (!currentUser || !currentUser.token) return;
+    fetch('/api/sync', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': currentUser.token
+      },
+      body: JSON.stringify(state)
+    }).catch(function(err){ console.error("Erro ao salvar na nuvem:", err); });
+  }
+
+  function loadFromCloud() {
+    if (!currentUser || !currentUser.token) {
+      return Promise.resolve(false);
+    }
+    return fetch('/api/sync', {
+      method: 'GET',
+      headers: {
+        'Authorization': currentUser.token
+      }
+    }).then(function(res){
+      if(res.status === 401 || res.status === 403) {
+        localStorage.removeItem('saldo_token');
+        localStorage.removeItem('saldo_user_name');
+        currentUser = null;
+        return null;
+      }
+      if(res.ok) return res.json();
+      return null;
+    }).then(function(cloudData){
+      if(cloudData){
+        state = cloudData;
+        ensureCurrentMonthSelected();
+        render();
+        return true;
+      }
+      return false;
+    }).catch(function(err){
+      console.error("Erro ao carregar dados da nuvem:", err);
+      return false;
+    });
   }
 
   function persist(){
@@ -109,7 +157,11 @@
     saveTimer = setTimeout(function(){
       storageSet(STORAGE_KEY, JSON.stringify(state)).then(function(ok){
         if(ok) flagSave();
-      }).catch(function(err){ console.error("Erro ao salvar:", err); });
+      }).catch(function(err){ console.error("Erro ao salvar localmente:", err); });
+
+      if (currentUser && currentUser.token) {
+        saveToCloud();
+      }
     }, 250);
   }
 
@@ -131,7 +183,9 @@
       state.months.push(todayKey);
       state.months.sort();
     }
-    state.selectedMonth = todayKey;
+    if (!state.selectedMonth) {
+      state.selectedMonth = todayKey;
+    }
   }
 
   function removeMonth(mk) {
@@ -139,8 +193,6 @@
       var idx = state.months.indexOf(mk);
       if (idx > -1) {
         state.months.splice(idx, 1);
-        
-        // Remove valores associados no objeto
         state.expenses.forEach(function(e) { delete e.values[mk]; });
         state.income.forEach(function(i) { delete i.values[mk]; });
 
@@ -166,6 +218,7 @@
 
   function renderTabs(){
     var row = document.getElementById('tabsRow');
+    if(!row) return;
     row.innerHTML = "";
 
     state.months.forEach(function(mk){
@@ -217,24 +270,39 @@
     var inc = sumMonth(state.income, mk);
     var saldo = inc.total - exp.total;
 
-    document.getElementById('statDespesas').textContent = fmtMoney(exp.total);
-    document.getElementById('statDespesasCount').textContent = exp.count + (exp.count===1?' item':' itens') + ' em ' + monthLabel(mk);
-    document.getElementById('statReceitas').textContent = fmtMoney(inc.total);
-    document.getElementById('statReceitasCount').textContent = inc.count + (inc.count===1?' item':' itens') + ' em ' + monthLabel(mk);
+    var elExp = document.getElementById('statDespesas');
+    if(elExp) elExp.textContent = fmtMoney(exp.total);
+
+    var elExpCount = document.getElementById('statDespesasCount');
+    if(elExpCount) elExpCount.textContent = exp.count + (exp.count===1?' item':' itens') + ' em ' + monthLabel(mk);
+
+    var elInc = document.getElementById('statReceitas');
+    if(elInc) elInc.textContent = fmtMoney(inc.total);
+
+    var elIncCount = document.getElementById('statReceitasCount');
+    if(elIncCount) elIncCount.textContent = inc.count + (inc.count===1?' item':' itens') + ' em ' + monthLabel(mk);
 
     var saldoEl = document.getElementById('statSaldo');
-    saldoEl.textContent = fmtMoney(saldo);
-    saldoEl.classList.toggle('pos', saldo >= 0);
-    saldoEl.classList.toggle('neg', saldo < 0);
-    document.getElementById('statSaldoSub').textContent = saldo >= 0 ? 'positivo' : 'negativo';
+    if(saldoEl) {
+      saldoEl.textContent = fmtMoney(saldo);
+      saldoEl.classList.toggle('pos', saldo >= 0);
+      saldoEl.classList.toggle('neg', saldo < 0);
+    }
 
-    document.getElementById('expTotalHead').textContent = fmtMoney(exp.total);
-    document.getElementById('incTotalHead').textContent = fmtMoney(inc.total);
+    var elSub = document.getElementById('statSaldoSub');
+    if(elSub) elSub.textContent = saldo >= 0 ? 'positivo' : 'negativo';
+
+    var elExpHead = document.getElementById('expTotalHead');
+    if(elExpHead) elExpHead.textContent = fmtMoney(exp.total);
+
+    var elIncHead = document.getElementById('incTotalHead');
+    if(elIncHead) elIncHead.textContent = fmtMoney(inc.total);
   }
 
   function renderTable(kind){
     var rawList = kind === 'expenses' ? state.expenses : state.income;
     var body = document.getElementById(kind === 'expenses' ? 'expensesBody' : 'incomeBody');
+    if(!body) return;
     body.innerHTML = "";
 
     var list = rawList.slice().sort(function(a, b){
@@ -336,30 +404,41 @@
     render();
     setTimeout(function(){
       var body = document.getElementById(kind === 'expenses' ? 'expensesBody' : 'incomeBody');
-      var inputs = body.querySelectorAll('.item-input');
-      if(inputs.length) inputs[inputs.length-1].focus();
+      if(body) {
+        var inputs = body.querySelectorAll('.item-input');
+        if(inputs.length) inputs[inputs.length-1].focus();
+      }
     }, 30);
   }
 
-  document.getElementById('addExpenseBtn').addEventListener('click', function(){ addRow('expenses'); });
-  document.getElementById('addIncomeBtn').addEventListener('click', function(){ addRow('income'); });
+  var btnAddExpense = document.getElementById('addExpenseBtn');
+  if(btnAddExpense) btnAddExpense.addEventListener('click', function(){ addRow('expenses'); });
 
-  document.getElementById('resetBtn').addEventListener('click', function(){
-    if(confirm('Isso vai carregar os dados genéricos de exemplo. Deseja continuar?')){
-      state = seedData();
-      ensureCurrentMonthSelected();
-      persist();
-      render();
-    }
-  });
+  var btnAddIncome = document.getElementById('addIncomeBtn');
+  if(btnAddIncome) btnAddIncome.addEventListener('click', function(){ addRow('income'); });
 
-  document.getElementById('clearBtn').addEventListener('click', function(){
-    if(confirm('Certeza de que deseja limpar todos os registros e começar um livro-caixa em branco?')){
-      state = emptyData();
-      persist();
-      render();
-    }
-  });
+  var btnReset = document.getElementById('resetBtn');
+  if(btnReset) {
+    btnReset.addEventListener('click', function(){
+      if(confirm('Isso vai carregar os dados genéricos de exemplo. Deseja continuar?')){
+        state = seedData();
+        ensureCurrentMonthSelected();
+        persist();
+        render();
+      }
+    });
+  }
+
+  var btnClear = document.getElementById('clearBtn');
+  if(btnClear) {
+    btnClear.addEventListener('click', function(){
+      if(confirm('Certeza de que deseja limpar todos os registros e começar um livro-caixa em branco?')){
+        state = emptyData();
+        persist();
+        render();
+      }
+    });
+  }
 
   var menuBtn = document.getElementById('menuBtn');
   var navOverlay = document.getElementById('navOverlay');
@@ -372,147 +451,210 @@
   var viewAuth = document.getElementById('viewAuth');
 
   function openMenu(){
-    navOverlay.classList.add('open');
-    menuBtn.setAttribute('aria-expanded', 'true');
+    if(navOverlay) navOverlay.classList.add('open');
+    if(menuBtn) menuBtn.setAttribute('aria-expanded', 'true');
   }
   function closeMenu(){
-    navOverlay.classList.remove('open');
-    menuBtn.setAttribute('aria-expanded', 'false');
+    if(navOverlay) navOverlay.classList.remove('open');
+    if(menuBtn) menuBtn.setAttribute('aria-expanded', 'false');
   }
-  menuBtn.addEventListener('click', function(){
-    navOverlay.classList.contains('open') ? closeMenu() : openMenu();
-  });
-  navOverlay.addEventListener('click', function(e){
-    if(e.target === navOverlay) closeMenu();
-  });
+  if(menuBtn) {
+    menuBtn.addEventListener('click', function(){
+      if(navOverlay) {
+        navOverlay.classList.contains('open') ? closeMenu() : openMenu();
+      }
+    });
+  }
+  if(navOverlay) {
+    navOverlay.addEventListener('click', function(e){
+      if(e.target === navOverlay) closeMenu();
+    });
+  }
 
   var pageTitle = document.getElementById('pageTitle');
   var pageSub = document.getElementById('pageSub');
 
   function showView(view){
-    viewMensal.style.display = 'none';
-    viewAnual.style.display = 'none';
-    viewAuth.style.display = 'none';
+    if(viewMensal) viewMensal.style.display = 'none';
+    if(viewAnual) viewAnual.style.display = 'none';
+    if(viewAuth) viewAuth.style.display = 'none';
 
-    navMensal.classList.remove('active');
-    navAnual.classList.remove('active');
-    navAuth.classList.remove('active');
+    if(navMensal) navMensal.classList.remove('active');
+    if(navAnual) navAnual.classList.remove('active');
+    if(navAuth) navAuth.classList.remove('active');
 
     if(view === 'anual'){
-      viewAnual.style.display = 'block';
-      navAnual.classList.add('active');
-      pageTitle.textContent = 'Resumo anual';
-      pageSub.textContent = 'Total de despesas e receitas, separado por ano.';
+      if(viewAnual) viewAnual.style.display = 'block';
+      if(navAnual) navAnual.classList.add('active');
+      if(pageTitle) pageTitle.textContent = 'Resumo anual';
+      if(pageSub) pageSub.textContent = 'Total de despesas e receitas, separado por ano.';
       renderAnual();
     } else if(view === 'auth'){
-      viewAuth.style.display = 'block';
-      navAuth.classList.add('active');
-      pageTitle.textContent = 'Acessar Conta';
-      pageSub.textContent = 'Faça login ou cadastre-se para sincronizar seus dados.';
+      if(viewAuth) viewAuth.style.display = 'block';
+      if(navAuth) navAuth.classList.add('active');
+      if(pageTitle) pageTitle.textContent = 'Acessar Conta';
+      if(pageSub) pageSub.textContent = currentUser ? ('Conectado como ' + currentUser.name) : 'Faça login ou cadastre-se para sincronizar seus dados.';
     } else {
-      viewMensal.style.display = 'block';
-      navMensal.classList.add('active');
-      pageTitle.textContent = 'Controle mensal';
-      pageSub.textContent = 'Despesas e receitas, mês a mês. Clique em qualquer campo para editar.';
+      if(viewMensal) viewMensal.style.display = 'block';
+      if(navMensal) navMensal.classList.add('active');
+      if(pageTitle) pageTitle.textContent = 'Controle mensal';
+      if(pageSub) pageSub.textContent = 'Despesas e receitas, mês a mês. Clique em qualquer campo para editar.';
       render();
     }
     closeMenu();
   }
-  navMensal.addEventListener('click', function(){ showView('mensal'); });
-  navAnual.addEventListener('click', function(){ showView('anual'); });
-  navAuth.addEventListener('click', function(){ showView('auth'); });
+  if(navMensal) navMensal.addEventListener('click', function(){ showView('mensal'); });
+  if(navAnual) navAnual.addEventListener('click', function(){ showView('anual'); });
+  if(navAuth) navAuth.addEventListener('click', function(){ showView('auth'); });
 
-  // Lógica de Abas de Autenticação
+  // AUTENTICAÇÃO E FORMULÁRIOS
   var tabLogin = document.getElementById('tabLogin');
   var tabRegister = document.getElementById('tabRegister');
   var formLogin = document.getElementById('formLogin');
   var formRegister = document.getElementById('formRegister');
 
-  tabLogin.addEventListener('click', function(){
-    tabLogin.classList.add('active');
-    tabRegister.classList.remove('active');
-    formLogin.style.display = 'flex';
-    formRegister.style.display = 'none';
-  });
+  if(tabLogin) {
+    tabLogin.addEventListener('click', function(){
+      tabLogin.classList.add('active');
+      if(tabRegister) tabRegister.classList.remove('active');
+      if(formLogin) formLogin.style.display = 'flex';
+      if(formRegister) formRegister.style.display = 'none';
+    });
+  }
 
-  tabRegister.addEventListener('click', function(){
-    tabRegister.classList.add('active');
-    tabLogin.classList.remove('active');
-    formRegister.style.display = 'flex';
-    formLogin.style.display = 'none';
-  });
+  if(tabRegister) {
+    tabRegister.addEventListener('click', function(){
+      tabRegister.classList.add('active');
+      if(tabLogin) tabLogin.classList.remove('active');
+      if(formRegister) formRegister.style.display = 'flex';
+      if(formLogin) formLogin.style.display = 'none';
+    });
+  }
 
-  formLogin.addEventListener('submit', function(e){
-    e.preventDefault();
-    alert('Login realizado com sucesso (simulação).');
-    showView('mensal');
-  });
+  if(formLogin) {
+    formLogin.addEventListener('submit', function(e){
+      e.preventDefault();
+      var inputs = formLogin.querySelectorAll('input');
+      var email = inputs[0].value;
+      var password = inputs[1].value;
 
-  formRegister.addEventListener('submit', function(e){
-    e.preventDefault();
-    alert('Cadastro realizado com sucesso (simulação).');
-    showView('mensal');
-  });
+      fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: password })
+      })
+      .then(function(res){ return res.json(); })
+      .then(function(data){
+        if(data.success) {
+          currentUser = { token: data.token, name: data.name };
+          localStorage.setItem('saldo_token', data.token);
+          localStorage.setItem('saldo_user_name', data.name);
+          alert('Login efetuado com sucesso!');
+          loadFromCloud().then(function(){
+            showView('mensal');
+          });
+        } else {
+          alert(data.error || 'Falha no login');
+        }
+      })
+      .catch(function(){ alert('Erro ao conectar ao servidor.'); });
+    });
+  }
+
+  if(formRegister) {
+    formRegister.addEventListener('submit', function(e){
+      e.preventDefault();
+      var inputs = formRegister.querySelectorAll('input');
+      var name = inputs[0].value;
+      var email = inputs[1].value;
+      var password = inputs[2].value;
+
+      fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name, email: email, password: password })
+      })
+      .then(function(res){ return res.json(); })
+      .then(function(data){
+        if(data.success) {
+          currentUser = { token: data.token, name: data.name };
+          localStorage.setItem('saldo_token', data.token);
+          localStorage.setItem('saldo_user_name', data.name);
+          alert('Cadastro realizado com sucesso!');
+          saveToCloud();
+          showView('mensal');
+        } else {
+          alert(data.error || 'Falha no cadastro');
+        }
+      })
+      .catch(function(){ alert('Erro ao conectar ao servidor.'); });
+    });
+  }
 
   var navExport = document.getElementById('navExport');
   var navImport = document.getElementById('navImport');
   var importFile = document.getElementById('importFile');
 
-  navExport.addEventListener('click', function(){
-    try{
-      var dataStr = JSON.stringify(state, null, 2);
-      var blob = new Blob([dataStr], { type: 'application/json' });
-      var url = URL.createObjectURL(blob);
-      var now = new Date();
-      var pad = function(n){ return n < 10 ? '0'+n : ''+n; };
-      var stamp = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate());
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = 'saldo-simples-backup-' + stamp + '.json';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(function(){ URL.revokeObjectURL(url); }, 500);
-    }catch(err){
-      alert('Não foi possível exportar os dados.');
-    }
-    closeMenu();
-  });
-
-  navImport.addEventListener('click', function(){
-    importFile.value = '';
-    importFile.click();
-  });
-
-  importFile.addEventListener('change', function(e){
-    var file = e.target.files && e.target.files[0];
-    if(!file) return;
-    var reader = new FileReader();
-    reader.onload = function(ev){
+  if(navExport) {
+    navExport.addEventListener('click', function(){
       try{
-        var parsed = JSON.parse(ev.target.result);
-        var valid = parsed && Array.isArray(parsed.months) && Array.isArray(parsed.expenses) && Array.isArray(parsed.income);
-        if(!valid){
-          alert('Arquivo inválido. Verifique se é um backup do Saldo Simples.');
-          return;
-        }
-        if(confirm('Isso vai substituir todos os dados atuais pelos dados do arquivo importado. Deseja continuar?')){
-          parsed.version = CURRENT_SCHEMA_VERSION;
-          state = parsed;
-          ensureCurrentMonthSelected();
-          persist();
-          render();
-          closeMenu();
-        }
+        var dataStr = JSON.stringify(state, null, 2);
+        var blob = new Blob([dataStr], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var now = new Date();
+        var pad = function(n){ return n < 10 ? '0'+n : ''+n; };
+        var stamp = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate());
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'saldo-simples-backup-' + stamp + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function(){ URL.revokeObjectURL(url); }, 500);
       }catch(err){
-        alert('Não foi possível ler o arquivo. Verifique se é um JSON válido.');
+        alert('Não foi possível exportar os dados.');
       }
-    };
-    reader.readAsText(file);
-  });
+      closeMenu();
+    });
+  }
+
+  if(navImport && importFile) {
+    navImport.addEventListener('click', function(){
+      importFile.value = '';
+      importFile.click();
+    });
+
+    importFile.addEventListener('change', function(e){
+      var file = e.target.files && e.target.files[0];
+      if(!file) return;
+      var reader = new FileReader();
+      reader.onload = function(ev){
+        try{
+          var parsed = JSON.parse(ev.target.result);
+          var valid = parsed && Array.isArray(parsed.months) && Array.isArray(parsed.expenses) && Array.isArray(parsed.income);
+          if(!valid){
+            alert('Arquivo inválido. Verifique se é um backup do Saldo Simples.');
+            return;
+          }
+          if(confirm('Isso vai substituir todos os dados atuais pelos dados do arquivo importado. Deseja continuar?')){
+            parsed.version = CURRENT_SCHEMA_VERSION;
+            state = parsed;
+            ensureCurrentMonthSelected();
+            persist();
+            render();
+            closeMenu();
+          }
+        }catch(err){
+          alert('Não foi possível ler o arquivo. Verifique se é um JSON válido.');
+        }
+      };
+      reader.readAsText(file);
+    });
+  }
 
   function renderAnual(){
     var container = document.getElementById('anualYears');
+    if(!container) return;
     container.innerHTML = "";
 
     var years = [];
@@ -567,13 +709,21 @@
     });
 
     var geralSaldo = geralReceitas - geralDespesas;
-    document.getElementById('geralDespesas').textContent = fmtMoney(geralDespesas);
-    document.getElementById('geralReceitas').textContent = fmtMoney(geralReceitas);
+    var elGeralExp = document.getElementById('geralDespesas');
+    if(elGeralExp) elGeralExp.textContent = fmtMoney(geralDespesas);
+
+    var elGeralInc = document.getElementById('geralReceitas');
+    if(elGeralInc) elGeralInc.textContent = fmtMoney(geralReceitas);
+
     var gsEl = document.getElementById('geralSaldo');
-    gsEl.textContent = fmtMoney(geralSaldo);
-    gsEl.classList.toggle('pos', geralSaldo >= 0);
-    gsEl.classList.toggle('neg', geralSaldo < 0);
-    document.getElementById('geralSaldoSub').textContent = years.length ? (years[0] + (years.length>1 ? ' – ' + years[years.length-1] : '')) : '\u00A0';
+    if(gsEl) {
+      gsEl.textContent = fmtMoney(geralSaldo);
+      gsEl.classList.toggle('pos', geralSaldo >= 0);
+      gsEl.classList.toggle('neg', geralSaldo < 0);
+    }
+
+    var elGeralSub = document.getElementById('geralSaldoSub');
+    if(elGeralSub) elGeralSub.textContent = years.length ? (years[0] + (years.length>1 ? ' – ' + years[years.length-1] : '')) : '\u00A0';
   }
 
   function sumItemsByYear(list, monthsInYear){
@@ -622,6 +772,12 @@
   }
 
   function init(){
+    var savedToken = localStorage.getItem('saldo_token');
+    var savedName = localStorage.getItem('saldo_user_name');
+    if (savedToken) {
+      currentUser = { token: savedToken, name: savedName };
+    }
+
     storageGet(STORAGE_KEY).then(function(value){
       if(value){
         try{
@@ -638,8 +794,18 @@
         state = seedData();
       }
       ensureCurrentMonthSelected();
-      persist();
-      render();
+
+      if (currentUser && currentUser.token) {
+        loadFromCloud().then(function(loaded){
+          if (!loaded) {
+            persist();
+            render();
+          }
+        });
+      } else {
+        persist();
+        render();
+      }
     }).catch(function(){
       state = seedData();
       ensureCurrentMonthSelected();

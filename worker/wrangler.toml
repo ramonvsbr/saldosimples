@@ -3,9 +3,8 @@ main = "index.js"
 compatibility_date = "2026-08-28"
 
 [assets]
-directory = ".."
-html_handling = "auto-trailing-slash"
-not_found_handling = "single-page-application"
+directory = "../"
+binding = "ASSETS"
 
 [[d1_databases]]
 binding = "DB"
