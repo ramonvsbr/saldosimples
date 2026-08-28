@@ -107,7 +107,154 @@
     }
   }
 
+  // --- TOASTS (notificações não bloqueantes, substituem alert()) ---
+  var toastStack = document.getElementById('toastStack');
+
+  function showToast(message, type, duration){
+    if(!toastStack){ return; }
+    type = type || 'info';
+    duration = duration || 4200;
+    var el = document.createElement('div');
+    el.className = 'toast ' + type;
+    el.textContent = message;
+    el.title = 'Clique para fechar';
+    el.addEventListener('click', function(){ dismissToast(el); });
+    toastStack.appendChild(el);
+    requestAnimationFrame(function(){ el.classList.add('show'); });
+    el._timer = setTimeout(function(){ dismissToast(el); }, duration);
+    return el;
+  }
+
+  function dismissToast(el){
+    if(!el || !el.parentNode) return;
+    clearTimeout(el._timer);
+    el.classList.remove('show');
+    setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 220);
+  }
+
+  // --- MODAL (substitui confirm()/alert() nativos por um estilo consistente com o app) ---
+  var modalOverlay = document.getElementById('modalOverlay');
+  var modalTitleEl = document.getElementById('modalTitle');
+  var modalMessageEl = document.getElementById('modalMessage');
+  var modalActionsEl = document.getElementById('modalActions');
+  var modalResolve = null;
+
+  function closeModalWith(result){
+    if(modalOverlay) modalOverlay.classList.remove('open');
+    if(modalResolve){
+      var resolve = modalResolve;
+      modalResolve = null;
+      resolve(result);
+    }
+  }
+
+  if(modalOverlay){
+    modalOverlay.addEventListener('click', function(e){
+      if(e.target === modalOverlay) closeModalWith(false);
+    });
+  }
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && modalOverlay && modalOverlay.classList.contains('open')){
+      closeModalWith(false);
+    }
+  });
+
+  function showAlert(message, opts){
+    opts = opts || {};
+    return new Promise(function(resolve){
+      if(!modalOverlay){ window.alert(message); resolve(); return; }
+      modalResolve = function(){ resolve(); };
+      if(modalTitleEl) modalTitleEl.textContent = opts.title || 'Aviso';
+      if(modalMessageEl) modalMessageEl.textContent = message;
+      if(modalActionsEl){
+        modalActionsEl.innerHTML = '';
+        var okBtn = document.createElement('button');
+        okBtn.type = 'button';
+        okBtn.className = 'modal-btn primary';
+        okBtn.textContent = opts.okLabel || 'OK';
+        okBtn.addEventListener('click', function(){ closeModalWith(); });
+        modalActionsEl.appendChild(okBtn);
+      }
+      modalOverlay.classList.add('open');
+    });
+  }
+
+  function showConfirm(message, opts){
+    opts = opts || {};
+    return new Promise(function(resolve){
+      if(!modalOverlay){ resolve(window.confirm(message)); return; }
+      modalResolve = resolve;
+      if(modalTitleEl) modalTitleEl.textContent = opts.title || 'Confirmar';
+      if(modalMessageEl) modalMessageEl.textContent = message;
+      if(modalActionsEl){
+        modalActionsEl.innerHTML = '';
+
+        var cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'modal-btn secondary';
+        cancelBtn.textContent = opts.cancelLabel || 'Cancelar';
+        cancelBtn.addEventListener('click', function(){ closeModalWith(false); });
+
+        var confirmBtn = document.createElement('button');
+        confirmBtn.type = 'button';
+        confirmBtn.className = 'modal-btn ' + (opts.danger ? 'danger' : 'primary');
+        confirmBtn.textContent = opts.confirmLabel || 'Confirmar';
+        confirmBtn.addEventListener('click', function(){ closeModalWith(true); });
+
+        modalActionsEl.appendChild(cancelBtn);
+        modalActionsEl.appendChild(confirmBtn);
+      }
+      modalOverlay.classList.add('open');
+    });
+  }
+
+  // --- BOTÕES COM ESTADO DE CARREGAMENTO ---
+  function setBtnLoading(btn, loading, loadingLabel){
+    if(!btn) return;
+    var spinner = btn.querySelector('.btn-spinner');
+    var label = btn.querySelector('.btn-label');
+    btn.disabled = loading;
+    if(spinner) spinner.hidden = !loading;
+    if(label){
+      if(loading){
+        if(label.dataset.originalText === undefined) label.dataset.originalText = label.textContent;
+        if(loadingLabel) label.textContent = loadingLabel;
+      } else if(label.dataset.originalText !== undefined){
+        label.textContent = label.dataset.originalText;
+      }
+    }
+  }
+
+  // --- MODO CLARO / ESCURO ---
+  var THEME_STORAGE_KEY = 'saldo_theme';
+
+  function getCurrentTheme(){
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  }
+
+  function applyTheme(theme){
+    document.documentElement.setAttribute('data-theme', theme);
+    try{ localStorage.setItem(THEME_STORAGE_KEY, theme); }catch(e){}
+
+    var toggles = document.querySelectorAll('.theme-toggle-btn');
+    for(var i = 0; i < toggles.length; i++){
+      toggles[i].setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+      var label = toggles[i].querySelector('.theme-toggle-label');
+      if(label) label.textContent = theme === 'dark' ? 'Modo claro' : 'Modo escuro';
+    }
+  }
+
+  var themeToggleBtns = document.querySelectorAll('.theme-toggle-btn');
+  for(var ttIdx = 0; ttIdx < themeToggleBtns.length; ttIdx++){
+    themeToggleBtns[ttIdx].addEventListener('click', function(){
+      applyTheme(getCurrentTheme() === 'dark' ? 'light' : 'dark');
+    });
+  }
+  applyTheme(getCurrentTheme());
+
   // INTEGRAÇÃO COM A NUVEM (CLOUDFLARE WORKERS / D1)
+  var lastCloudErrorToastAt = 0;
+
   function saveToCloud() {
     if (!currentUser || !currentUser.token) return;
     fetch('/api/sync', {
@@ -117,7 +264,16 @@
         'Authorization': currentUser.token
       },
       body: JSON.stringify(state)
-    }).catch(function(err){ console.error("Erro ao salvar na nuvem:", err); });
+    }).then(function(res){
+      if(!res.ok) throw new Error('sync-failed');
+    }).catch(function(err){
+      console.error("Erro ao salvar na nuvem:", err);
+      var now = Date.now();
+      if(now - lastCloudErrorToastAt > 10000){
+        lastCloudErrorToastAt = now;
+        showToast('Não foi possível sincronizar com a nuvem agora. Suas alterações continuam salvas neste dispositivo.', 'error');
+      }
+    });
   }
 
   function loadFromCloud() {
@@ -133,7 +289,10 @@
       if(res.status === 401 || res.status === 403) {
         localStorage.removeItem('saldo_token');
         localStorage.removeItem('saldo_user_name');
+        localStorage.removeItem('saldo_user_first_name');
         currentUser = null;
+        updateAccountUI();
+        showToast('Sua sessão expirou. Faça login novamente para sincronizar.', 'error');
         return null;
       }
       if(res.ok) return res.json();
@@ -189,7 +348,8 @@
   }
 
   function removeMonth(mk) {
-    if (confirm("Tem certeza que deseja apagar o mês " + monthLabel(mk) + "?")) {
+    showConfirm("Tem certeza que deseja apagar o mês " + monthLabel(mk) + "?", { title: 'Apagar mês', confirmLabel: 'Apagar', danger: true }).then(function(ok){
+      if(!ok) return;
       var idx = state.months.indexOf(mk);
       if (idx > -1) {
         state.months.splice(idx, 1);
@@ -206,7 +366,7 @@
         persist();
         render();
       }
-    }
+    });
   }
 
   function render(){
@@ -420,54 +580,52 @@
   var btnReset = document.getElementById('resetBtn');
   if(btnReset) {
     btnReset.addEventListener('click', function(){
-      if(confirm('Isso vai carregar os dados genéricos de exemplo. Deseja continuar?')){
+      showConfirm('Isso vai carregar os dados genéricos de exemplo. Deseja continuar?', { title: 'Carregar exemplo', confirmLabel: 'Carregar' }).then(function(ok){
+        if(!ok) return;
         state = seedData();
         ensureCurrentMonthSelected();
         persist();
         render();
-      }
+      });
     });
   }
 
   var btnClear = document.getElementById('clearBtn');
   if(btnClear) {
     btnClear.addEventListener('click', function(){
-      if(confirm('Certeza de que deseja limpar todos os registros e começar um livro-caixa em branco?')){
+      showConfirm('Certeza de que deseja limpar todos os registros e começar um livro-caixa em branco?', { title: 'Limpar tudo', confirmLabel: 'Limpar', danger: true }).then(function(ok){
+        if(!ok) return;
         state = emptyData();
         persist();
         render();
-      }
+      });
     });
   }
 
-  var menuBtn = document.getElementById('menuBtn');
-  var navOverlay = document.getElementById('navOverlay');
-  var navMensal = document.getElementById('navMensal');
-  var navAnual = document.getElementById('navAnual');
-  var navAuth = document.getElementById('navAuth');
+  var viewTriggers = document.querySelectorAll('.view-trigger');
+  var contaTabBtn = document.getElementById('contaTabBtn');
+  var sheetOverlay = document.getElementById('sheetOverlay');
 
   var viewMensal = document.getElementById('viewMensal');
   var viewAnual = document.getElementById('viewAnual');
   var viewAuth = document.getElementById('viewAuth');
 
-  function openMenu(){
-    if(navOverlay) navOverlay.classList.add('open');
-    if(menuBtn) menuBtn.setAttribute('aria-expanded', 'true');
+  function openSheet(){
+    if(sheetOverlay) sheetOverlay.classList.add('open');
   }
-  function closeMenu(){
-    if(navOverlay) navOverlay.classList.remove('open');
-    if(menuBtn) menuBtn.setAttribute('aria-expanded', 'false');
+  function closeSheet(){
+    if(sheetOverlay) sheetOverlay.classList.remove('open');
   }
-  if(menuBtn) {
-    menuBtn.addEventListener('click', function(){
-      if(navOverlay) {
-        navOverlay.classList.contains('open') ? closeMenu() : openMenu();
+  if(contaTabBtn){
+    contaTabBtn.addEventListener('click', function(){
+      if(sheetOverlay) {
+        sheetOverlay.classList.contains('open') ? closeSheet() : openSheet();
       }
     });
   }
-  if(navOverlay) {
-    navOverlay.addEventListener('click', function(e){
-      if(e.target === navOverlay) closeMenu();
+  if(sheetOverlay){
+    sheetOverlay.addEventListener('click', function(e){
+      if(e.target === sheetOverlay) closeSheet();
     });
   }
 
@@ -479,33 +637,41 @@
     if(viewAnual) viewAnual.style.display = 'none';
     if(viewAuth) viewAuth.style.display = 'none';
 
-    if(navMensal) navMensal.classList.remove('active');
-    if(navAnual) navAnual.classList.remove('active');
-    if(navAuth) navAuth.classList.remove('active');
+    for(var vi = 0; vi < viewTriggers.length; vi++){ viewTriggers[vi].classList.remove('active'); }
+    if(contaTabBtn) contaTabBtn.classList.remove('active');
+
+    function activateTriggers(v){
+      for(var i = 0; i < viewTriggers.length; i++){
+        if(viewTriggers[i].getAttribute('data-view') === v) viewTriggers[i].classList.add('active');
+      }
+    }
 
     if(view === 'anual'){
       if(viewAnual) viewAnual.style.display = 'block';
-      if(navAnual) navAnual.classList.add('active');
+      activateTriggers('anual');
       if(pageTitle) pageTitle.textContent = 'Resumo anual';
       if(pageSub) pageSub.textContent = 'Total de despesas e receitas, separado por ano.';
       renderAnual();
     } else if(view === 'auth'){
       if(viewAuth) viewAuth.style.display = 'block';
-      if(navAuth) navAuth.classList.add('active');
+      activateTriggers('auth');
+      if(contaTabBtn) contaTabBtn.classList.add('active');
       if(pageTitle) pageTitle.textContent = 'Acessar Conta';
       if(pageSub) pageSub.textContent = currentUser ? ('Conectado como ' + currentUser.name) : 'Faça login ou cadastre-se para sincronizar seus dados.';
     } else {
       if(viewMensal) viewMensal.style.display = 'block';
-      if(navMensal) navMensal.classList.add('active');
+      activateTriggers('mensal');
       if(pageTitle) pageTitle.textContent = 'Controle mensal';
       if(pageSub) pageSub.textContent = 'Despesas e receitas, mês a mês. Clique em qualquer campo para editar.';
       render();
     }
-    closeMenu();
+    closeSheet();
   }
-  if(navMensal) navMensal.addEventListener('click', function(){ showView('mensal'); });
-  if(navAnual) navAnual.addEventListener('click', function(){ showView('anual'); });
-  if(navAuth) navAuth.addEventListener('click', function(){ showView('auth'); });
+  for(var vt = 0; vt < viewTriggers.length; vt++){
+    (function(btn){
+      btn.addEventListener('click', function(){ showView(btn.getAttribute('data-view')); });
+    })(viewTriggers[vt]);
+  }
 
   // AUTENTICAÇÃO E FORMULÁRIOS
   var tabLogin = document.getElementById('tabLogin');
@@ -532,11 +698,14 @@
   }
 
   if(formLogin) {
+    var loginSubmitBtn = document.getElementById('loginSubmitBtn');
     formLogin.addEventListener('submit', function(e){
       e.preventDefault();
       var inputs = formLogin.querySelectorAll('input');
       var email = inputs[0].value;
       var password = inputs[1].value;
+
+      setBtnLoading(loginSubmitBtn, true, 'Entrando...');
 
       fetch('/api/login', {
         method: 'POST',
@@ -546,83 +715,139 @@
       .then(function(res){ return res.json(); })
       .then(function(data){
         if(data.success) {
-          currentUser = { token: data.token, name: data.name };
+          currentUser = { token: data.token, name: data.name, firstName: data.firstName || (data.name || '').split(' ')[0] };
           localStorage.setItem('saldo_token', data.token);
-          localStorage.setItem('saldo_user_name', data.name);
-          alert('Login efetuado com sucesso!');
+          localStorage.setItem('saldo_user_name', currentUser.name);
+          localStorage.setItem('saldo_user_first_name', currentUser.firstName);
+          updateAccountUI();
+          showToast('Login efetuado com sucesso!', 'success');
+          setBtnLoading(loginSubmitBtn, true, 'Sincronizando...');
           loadFromCloud().then(function(){
+            setBtnLoading(loginSubmitBtn, false);
             showView('mensal');
           });
         } else {
-          alert(data.error || 'Falha no login');
+          setBtnLoading(loginSubmitBtn, false);
+          showToast(data.error || 'Falha no login', 'error');
         }
       })
-      .catch(function(){ alert('Erro ao conectar ao servidor.'); });
+      .catch(function(){
+        setBtnLoading(loginSubmitBtn, false);
+        showToast('Erro ao conectar ao servidor.', 'error');
+      });
     });
   }
 
   if(formRegister) {
+    var registerSubmitBtn = document.getElementById('registerSubmitBtn');
     formRegister.addEventListener('submit', function(e){
       e.preventDefault();
-      var inputs = formRegister.querySelectorAll('input');
-      var name = inputs[0].value;
-      var email = inputs[1].value;
-      var password = inputs[2].value;
+      var firstNameInput = document.getElementById('regFirstName');
+      var lastNameInput = document.getElementById('regLastName');
+      var firstName = (firstNameInput ? firstNameInput.value : '').trim();
+      var lastName = (lastNameInput ? lastNameInput.value : '').trim();
+      var name = (firstName + ' ' + lastName).trim();
+      var email = document.getElementById('regEmail').value;
+      var password = document.getElementById('regPassword').value;
+
+      setBtnLoading(registerSubmitBtn, true, 'Criando conta...');
 
       fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name, email: email, password: password })
+        body: JSON.stringify({ name: name, firstName: firstName, lastName: lastName, email: email, password: password })
       })
       .then(function(res){ return res.json(); })
       .then(function(data){
         if(data.success) {
-          currentUser = { token: data.token, name: data.name };
+          currentUser = { token: data.token, name: data.name || name, firstName: data.firstName || firstName };
           localStorage.setItem('saldo_token', data.token);
-          localStorage.setItem('saldo_user_name', data.name);
-          alert('Cadastro realizado com sucesso!');
+          localStorage.setItem('saldo_user_name', currentUser.name);
+          localStorage.setItem('saldo_user_first_name', currentUser.firstName);
+          showToast('Cadastro realizado com sucesso!', 'success');
           saveToCloud();
+          updateAccountUI();
+          setBtnLoading(registerSubmitBtn, false);
           showView('mensal');
         } else {
-          alert(data.error || 'Falha no cadastro');
+          setBtnLoading(registerSubmitBtn, false);
+          showToast(data.error || 'Falha no cadastro', 'error');
         }
       })
-      .catch(function(){ alert('Erro ao conectar ao servidor.'); });
+      .catch(function(){
+        setBtnLoading(registerSubmitBtn, false);
+        showToast('Erro ao conectar ao servidor.', 'error');
+      });
     });
   }
 
-  var navExport = document.getElementById('navExport');
-  var navImport = document.getElementById('navImport');
+  function updateAccountUI(){
+    var loggedIn = !!(currentUser && currentUser.token);
+    var displayName = loggedIn ? (currentUser.firstName || (currentUser.name || '').split(' ')[0] || 'Conta') : '';
+
+    var entryBtns = document.querySelectorAll('.auth-entry-btn');
+    for(var i = 0; i < entryBtns.length; i++){
+      entryBtns[i].style.display = loggedIn ? 'none' : 'flex';
+    }
+
+    var loggedBtns = document.querySelectorAll('.account-logged-btn');
+    for(var j = 0; j < loggedBtns.length; j++){
+      loggedBtns[j].style.display = loggedIn ? 'flex' : 'none';
+      var nameEl = loggedBtns[j].querySelector('.account-logged-name');
+      if(nameEl) nameEl.textContent = displayName;
+    }
+  }
+
+  function doLogout(){
+    currentUser = null;
+    localStorage.removeItem('saldo_token');
+    localStorage.removeItem('saldo_user_name');
+    localStorage.removeItem('saldo_user_first_name');
+    updateAccountUI();
+    closeSheet();
+    showView('mensal');
+  }
+
+  var logoutBtns = document.querySelectorAll('.account-logout-btn');
+  for(var lb = 0; lb < logoutBtns.length; lb++){
+    logoutBtns[lb].addEventListener('click', doLogout);
+  }
+
+  var navExportBtns = document.querySelectorAll('.action-export');
+  var navImportBtns = document.querySelectorAll('.action-import');
   var importFile = document.getElementById('importFile');
 
-  if(navExport) {
-    navExport.addEventListener('click', function(){
-      try{
-        var dataStr = JSON.stringify(state, null, 2);
-        var blob = new Blob([dataStr], { type: 'application/json' });
-        var url = URL.createObjectURL(blob);
-        var now = new Date();
-        var pad = function(n){ return n < 10 ? '0'+n : ''+n; };
-        var stamp = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate());
-        var a = document.createElement('a');
-        a.href = url;
-        a.download = 'saldo-simples-backup-' + stamp + '.json';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(function(){ URL.revokeObjectURL(url); }, 500);
-      }catch(err){
-        alert('Não foi possível exportar os dados.');
-      }
-      closeMenu();
-    });
+  function doExport(){
+    try{
+      var dataStr = JSON.stringify(state, null, 2);
+      var blob = new Blob([dataStr], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var now = new Date();
+      var pad = function(n){ return n < 10 ? '0'+n : ''+n; };
+      var stamp = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate());
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'saldo-simples-backup-' + stamp + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 500);
+    }catch(err){
+      showToast('Não foi possível exportar os dados.', 'error');
+    }
+    closeSheet();
+  }
+  for(var ei = 0; ei < navExportBtns.length; ei++){
+    navExportBtns[ei].addEventListener('click', doExport);
   }
 
-  if(navImport && importFile) {
-    navImport.addEventListener('click', function(){
-      importFile.value = '';
-      importFile.click();
-    });
+  if(navImportBtns.length && importFile) {
+    for(var ii = 0; ii < navImportBtns.length; ii++){
+      navImportBtns[ii].addEventListener('click', function(){
+        importFile.value = '';
+        importFile.click();
+      });
+    }
 
     importFile.addEventListener('change', function(e){
       var file = e.target.files && e.target.files[0];
@@ -633,19 +858,20 @@
           var parsed = JSON.parse(ev.target.result);
           var valid = parsed && Array.isArray(parsed.months) && Array.isArray(parsed.expenses) && Array.isArray(parsed.income);
           if(!valid){
-            alert('Arquivo inválido. Verifique se é um backup do Saldo Simples.');
+            showToast('Arquivo inválido. Verifique se é um backup do Saldo Simples.', 'error');
             return;
           }
-          if(confirm('Isso vai substituir todos os dados atuais pelos dados do arquivo importado. Deseja continuar?')){
+          showConfirm('Isso vai substituir todos os dados atuais pelos dados do arquivo importado. Deseja continuar?', { title: 'Importar backup', confirmLabel: 'Importar', danger: true }).then(function(ok){
+            if(!ok) return;
             parsed.version = CURRENT_SCHEMA_VERSION;
             state = parsed;
             ensureCurrentMonthSelected();
             persist();
             render();
-            closeMenu();
-          }
+            closeSheet();
+          });
         }catch(err){
-          alert('Não foi possível ler o arquivo. Verifique se é um JSON válido.');
+          showToast('Não foi possível ler o arquivo. Verifique se é um JSON válido.', 'error');
         }
       };
       reader.readAsText(file);
@@ -774,9 +1000,11 @@
   function init(){
     var savedToken = localStorage.getItem('saldo_token');
     var savedName = localStorage.getItem('saldo_user_name');
+    var savedFirstName = localStorage.getItem('saldo_user_first_name');
     if (savedToken) {
-      currentUser = { token: savedToken, name: savedName };
+      currentUser = { token: savedToken, name: savedName, firstName: savedFirstName || (savedName || '').split(' ')[0] };
     }
+    updateAccountUI();
 
     storageGet(STORAGE_KEY).then(function(value){
       if(value){

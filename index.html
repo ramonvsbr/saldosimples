@@ -8,51 +8,76 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#10b981">
+  <!-- Forçar modo web app no iOS/Safari -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <!-- Define a cor da barra de status do celular -->
+  <meta name="theme-color" content="#F3F5EE">
   <link rel="stylesheet" href="assets/css/style.css">
+  <script>
+    // Aplica o tema salvo antes de pintar a página, para evitar o "flash" de tema errado.
+    (function(){
+      try {
+        var saved = localStorage.getItem('saldo_theme');
+        var isDark = saved ? saved === 'dark' : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+      } catch(e){}
+    })();
+  </script>
 </head>
 <body>
-  <div class="nav-overlay" id="navOverlay">
-    <nav class="nav-panel">
+  <div class="app-shell">
+    <aside class="side-nav" id="sideNav">
       <p class="nav-eyebrow">Navegar</p>
-      <button class="nav-link active" id="navMensal" data-view="mensal">
+      <button class="nav-link view-trigger active" data-view="mensal">
         <span class="nav-link-title">Mensal</span>
         <span class="nav-link-sub">despesas e receitas do mês</span>
       </button>
-      <button class="nav-link" id="navAnual" data-view="anual">
+      <button class="nav-link view-trigger" data-view="anual">
         <span class="nav-link-title">Anual</span>
         <span class="nav-link-sub">soma de gastos por ano</span>
       </button>
 
       <p class="nav-eyebrow" style="margin-top:14px;">Conta</p>
-      <button class="nav-link" id="navAuth" data-view="auth">
+      <button class="nav-link view-trigger auth-entry-btn" data-view="auth">
         <span class="nav-link-title">Entrar / Cadastrar</span>
         <span class="nav-link-sub">acessar sua conta</span>
       </button>
+      <div class="nav-link account-logged-btn" style="display:none;">
+        <div class="account-logged-info">
+          <span class="nav-link-title account-logged-name">Usuário</span>
+          <span class="nav-link-sub">conectado</span>
+        </div>
+        <button type="button" class="account-logout-btn" title="Sair da conta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        </button>
+      </div>
 
       <p class="nav-eyebrow" style="margin-top:14px;">Dados</p>
-      <button class="nav-link" id="navExport">
+      <button class="nav-link action-export">
         <span class="nav-link-title">Exportar</span>
         <span class="nav-link-sub">baixar backup em .json</span>
       </button>
-      <button class="nav-link" id="navImport">
+      <button class="nav-link action-import">
         <span class="nav-link-title">Importar</span>
         <span class="nav-link-sub">carregar backup em .json</span>
       </button>
-      <input type="file" id="importFile" accept="application/json" style="display:none">
-    </nav>
-  </div>
 
-  <div class="wrap" id="app">
-    <header class="top-bar">
-      <button class="menu-btn" id="menuBtn" aria-label="Abrir menu" aria-expanded="false">
-        <span></span><span></span><span></span>
+      <p class="nav-eyebrow" style="margin-top:14px;">Aparência</p>
+      <button type="button" class="nav-link theme-toggle-btn" aria-pressed="false">
+        <span class="nav-link-title theme-toggle-label">Modo escuro</span>
+        <span class="theme-toggle-track"><span class="theme-toggle-thumb"></span></span>
       </button>
-      <div class="top-bar-title">
-        <p class="eyebrow">Saldo Simples</p>
-        <h1 id="pageTitle">Controle mensal</h1>
-        <p class="sub" id="pageSub">Despesas e receitas, mês a mês. Clique em qualquer campo para editar.</p>
-      </div>
-    </header>
+    </aside>
+
+    <div class="wrap" id="app">
+      <header class="top-bar">
+        <div class="top-bar-title">
+          <h1 id="pageTitle">Controle mensal</h1>
+          <p class="sub" id="pageSub">Despesas e receitas, mês a mês. Clique em qualquer campo para editar.</p>
+        </div>
+      </header>
+
 
     <div id="viewMensal">
       <div class="tabs-row" id="tabsRow"></div>
@@ -151,13 +176,21 @@
             <label for="loginPassword">Senha</label>
             <input type="password" id="loginPassword" required placeholder="••••••••">
           </div>
-          <button type="submit" class="auth-submit">Entrar</button>
+          <button type="submit" class="auth-submit" id="loginSubmitBtn">
+            <span class="btn-spinner" hidden></span><span class="btn-label">Entrar</span>
+          </button>
         </form>
 
         <form id="formRegister" class="auth-form" style="display:none;">
-          <div class="form-group">
-            <label for="regName">Nome completo</label>
-            <input type="text" id="regName" required placeholder="Seu nome">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="regFirstName">Nome</label>
+              <input type="text" id="regFirstName" required placeholder="Seu nome">
+            </div>
+            <div class="form-group">
+              <label for="regLastName">Sobrenome</label>
+              <input type="text" id="regLastName" required placeholder="Seu sobrenome">
+            </div>
           </div>
           <div class="form-group">
             <label for="regEmail">E-mail</label>
@@ -167,7 +200,9 @@
             <label for="regPassword">Senha</label>
             <input type="password" id="regPassword" required placeholder="••••••••">
           </div>
-          <button type="submit" class="auth-submit">Criar conta</button>
+          <button type="submit" class="auth-submit" id="registerSubmitBtn">
+            <span class="btn-spinner" hidden></span><span class="btn-label">Criar conta</span>
+          </button>
         </form>
       </div>
     </div>
@@ -177,10 +212,86 @@
       <button id="clearBtn">limpar exemplo</button> &middot; 
       <button id="resetBtn">carregar exemplo</button>
     </footer>
+    </div>
+  </div>
+
+  <input type="file" id="importFile" accept="application/json" style="display:none">
+
+  <!-- Rodapé de navegação para celular -->
+  <nav class="mobile-tabbar" id="mobileTabbar">
+    <button class="tabbar-btn view-trigger active" data-view="mensal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"></rect><line x1="3.5" y1="9.5" x2="20.5" y2="9.5"></line><line x1="8" y1="2.5" x2="8" y2="6.5"></line><line x1="16" y1="2.5" x2="16" y2="6.5"></line></svg>
+      <span>Mensal</span>
+    </button>
+    <button class="tabbar-btn view-trigger" data-view="anual">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="20" x2="5" y2="12"></line><line x1="12" y1="20" x2="12" y2="6"></line><line x1="19" y1="20" x2="19" y2="15"></line><line x1="3" y1="20.5" x2="21" y2="20.5"></line></svg>
+      <span>Anual</span>
+    </button>
+    <button class="tabbar-btn tabbar-conta" id="contaTabBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"></circle><path d="M4.5 20c1.4-3.6 4.4-5.6 7.5-5.6s6.1 2 7.5 5.6"></path></svg>
+      <span>Conta</span>
+    </button>
+  </nav>
+
+  <!-- Menu suspenso (bottom sheet) do botão Conta no celular -->
+  <div class="sheet-overlay" id="sheetOverlay">
+    <div class="bottom-sheet" id="bottomSheet">
+      <span class="sheet-handle"></span>
+      <button class="nav-link view-trigger auth-entry-btn" data-view="auth">
+        <span class="nav-link-title">Entrar / Cadastrar</span>
+        <span class="nav-link-sub">acessar sua conta</span>
+      </button>
+      <div class="nav-link account-logged-btn" style="display:none;">
+        <div class="account-logged-info">
+          <span class="nav-link-title account-logged-name">Usuário</span>
+          <span class="nav-link-sub">conectado</span>
+        </div>
+        <button type="button" class="account-logout-btn" title="Sair da conta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        </button>
+      </div>
+      <p class="nav-eyebrow" style="margin-top:10px;">Dados</p>
+      <button class="nav-link action-export">
+        <span class="nav-link-title">Exportar</span>
+        <span class="nav-link-sub">baixar backup em .json</span>
+      </button>
+      <button class="nav-link action-import">
+        <span class="nav-link-title">Importar</span>
+        <span class="nav-link-sub">carregar backup em .json</span>
+      </button>
+
+      <p class="nav-eyebrow" style="margin-top:10px;">Aparência</p>
+      <button type="button" class="nav-link theme-toggle-btn" aria-pressed="false">
+        <span class="nav-link-title theme-toggle-label">Modo escuro</span>
+        <span class="theme-toggle-track"><span class="theme-toggle-thumb"></span></span>
+      </button>
+    </div>
   </div>
 
   <div class="save-flag" id="saveFlag">salvo</div>
 
+  <!-- Modal customizado (substitui confirm()/alert() nativos) -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <h3 class="modal-title" id="modalTitle"></h3>
+      <p class="modal-message" id="modalMessage"></p>
+      <div class="modal-actions" id="modalActions"></div>
+    </div>
+  </div>
+
+  <!-- Notificações não bloqueantes -->
+  <div class="toast-stack" id="toastStack"></div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .catch(err => console.log('Erro ao registrar Service Worker:', err));
+      });
+    }
+  </script>
+
   <script src="assets/js/app.js"></script>
+  
 </body>
 </html>
