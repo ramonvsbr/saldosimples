@@ -1,0 +1,13 @@
+name = "saldosimples"
+main = "index.js"
+compatibility_date = "2026-08-28"
+
+[assets]
+directory = ".."
+html_handling = "auto-trailing-slash"
+not_found_handling = "single-page-application"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "saldosimples-db"
+database_id = "b9988dff-d632-4655-85b2-9ed3eb0a0fd7"

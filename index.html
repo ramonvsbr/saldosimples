@@ -1,547 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Saldo Simples</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --paper: #F3F5EE;
-    --sheet: #FFFFFF;
-    --ink: #22322C;
-    --ink-soft: #5B6960;
-    --ink-faint: #92A096;
-    --rule: #D8DECF;
-    --rule-strong: #C1C9B4;
-    --margin: #B0503F;
-    --margin-soft: rgba(176,80,63,0.35);
-    --gold: #9C7A2C;
-    --gold-soft: rgba(156,122,44,0.12);
-    --pos: #35664A;
-    --pos-soft: rgba(53,102,74,0.10);
-    --neg: #A63D3D;
-    --neg-soft: rgba(166,61,61,0.10);
-    --tab-inactive: #E6E9DC;
-    --shadow: 0 1px 2px rgba(34,50,44,0.06), 0 6px 16px rgba(34,50,44,0.05);
-  }
-
-  *{ box-sizing: border-box; }
-  html,body{ margin:0; padding:0; }
-  body{
-    background: var(--paper);
-    background-image:
-      linear-gradient(var(--paper), var(--paper)),
-      repeating-linear-gradient(90deg, rgba(34,50,44,0.02) 0 1px, transparent 1px 48px);
-    color: var(--ink);
-    font-family: 'Inter', sans-serif;
-    min-height: 100vh;
-    padding: 28px 16px 80px;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  .wrap{ max-width: 880px; margin: 0 auto; }
-
-  /* Header */
-  header{ margin-bottom: 22px; }
-  .eyebrow{
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--margin);
-    margin: 0 0 6px;
-  }
-  h1{
-    font-family:'Fraunces', serif;
-    font-optical-sizing: auto;
-    font-weight: 600;
-    font-size: 34px;
-    margin: 0 0 4px;
-    letter-spacing: -0.01em;
-  }
-  .sub{
-    color: var(--ink-soft);
-    font-size: 14px;
-    margin: 0;
-  }
-
-  /* Month tabs */
-  .tabs-row{
-    display:flex;
-    align-items: flex-end;
-    gap: 6px;
-    margin: 22px 0 0;
-    overflow-x: auto;
-    padding-bottom: 2px;
-    scrollbar-width: thin;
-  }
-  .tabs-row::-webkit-scrollbar{ height: 5px; }
-  .tabs-row::-webkit-scrollbar-thumb{ background: var(--rule-strong); border-radius: 4px; }
-
-  .tab{
-    flex: 0 0 auto;
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 12.5px;
-    padding: 9px 14px 8px;
-    background: var(--tab-inactive);
-    color: var(--ink-soft);
-    border: none;
-    border-radius: 8px 8px 0 0;
-    cursor: pointer;
-    position: relative;
-    top: 3px;
-    transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
-    white-space: nowrap;
-  }
-  .tab:nth-child(odd){ transform: rotate(-0.6deg); }
-  .tab:nth-child(even){ transform: rotate(0.6deg); }
-  .tab:hover{ color: var(--ink); background: #DEE3D1; }
-  .tab.active{
-    background: var(--sheet);
-    color: var(--ink);
-    font-weight: 600;
-    top: 0;
-    transform: none;
-    box-shadow: 0 -2px 8px rgba(34,50,44,0.06);
-  }
-  .tab-add{
-    flex: 0 0 auto;
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 16px;
-    line-height: 1;
-    width: 34px; height: 34px;
-    border-radius: 50%;
-    border: 1px dashed var(--rule-strong);
-    background: transparent;
-    color: var(--ink-soft);
-    cursor: pointer;
-    align-self: center;
-    transition: all 0.15s ease;
-  }
-  .tab-add:hover{ border-color: var(--margin); color: var(--margin); }
-
-  /* Panel geral */
-  .panel{
-    background: var(--sheet);
-    border-radius: 0 10px 10px 10px;
-    box-shadow: var(--shadow);
-    padding: 22px;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 0;
-    margin-bottom: 28px;
-    overflow: hidden;
-  }
-  .stat{ padding: 4px 18px; position:relative; }
-  .stat + .stat{ border-left: 1px solid var(--rule); }
-  .stat-label{
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 10.5px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    margin: 0 0 8px;
-  }
-  .stat-value{
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 25px;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    margin: 0;
-    letter-spacing: -0.02em;
-  }
-  .stat.despesas .stat-value{ color: var(--margin); }
-  .stat.receitas .stat-value{ color: var(--gold); }
-  .stat.saldo .stat-value.pos{ color: var(--pos); }
-  .stat.saldo .stat-value.neg{ color: var(--neg); }
-  .stat-sub{
-    font-size: 11px;
-    color: var(--ink-faint);
-    margin: 4px 0 0;
-  }
-
-  @media (max-width: 560px){
-    .panel{ grid-template-columns: 1fr; }
-    .stat + .stat{ border-left:none; border-top: 1px solid var(--rule); padding-top: 14px; margin-top: 10px;}
-  }
-
-  /* Sections */
-  section.book{
-    background: var(--sheet);
-    border-radius: 10px;
-    box-shadow: var(--shadow);
-    margin-bottom: 22px;
-    overflow: hidden;
-    border-left: 3px solid var(--margin-soft);
-  }
-  section.book.income{ border-left-color: rgba(156,122,44,0.35); }
-
-  .book-head{
-    display:flex;
-    align-items:baseline;
-    justify-content: space-between;
-    padding: 18px 22px 12px;
-  }
-  .book-title{
-    font-family:'Fraunces', serif;
-    font-weight: 600;
-    font-size: 19px;
-    margin: 0;
-  }
-  .book-total{
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 15px;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-  }
-  section.book .book-total{ color: var(--margin); }
-  section.book.income .book-total{ color: var(--gold); }
-
-  table{ width: 100%; border-collapse: collapse; }
-  thead th{
-    text-align: left;
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 10.5px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    font-weight: 500;
-    padding: 6px 22px;
-    border-top: 1px solid var(--rule);
-    border-bottom: 1px solid var(--rule-strong);
-  }
-  thead th.col-day{ width: 58px; }
-  thead th.col-value{ width: 150px; text-align: right; }
-  thead th.col-action{ width: 40px; }
-
-  tbody tr{ border-bottom: 1px solid var(--rule); transition: background 0.12s ease; }
-  tbody tr:hover{ background: rgba(34,50,44,0.02); }
-  tbody td{ padding: 4px 22px; vertical-align: middle; }
-  tbody td:first-child{ padding-left: 14px; padding-right: 4px; }
-
-  .cell-input{
-    width: 100%;
-    border: none;
-    background: transparent;
-    font-family: inherit;
-    color: var(--ink);
-    font-size: 14px;
-    padding: 8px 4px;
-    border-radius: 4px;
-    outline: none;
-    transition: background 0.12s ease;
-  }
-  .cell-input:hover{ background: rgba(34,50,44,0.035); }
-  .cell-input:focus{ background: var(--gold-soft); box-shadow: inset 0 0 0 1px var(--rule-strong); }
-  .cell-input.day-input{ font-family:'IBM Plex Mono', monospace; text-align:center; -moz-appearance:textfield; }
-  .cell-input.day-input::-webkit-inner-spin-button,
-  .cell-input.day-input::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
-  .cell-input.value-input{ -moz-appearance:textfield; }
-  .cell-input.value-input::-webkit-inner-spin-button,
-  .cell-input.value-input::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
-  .cell-input.value-input{
-    font-family:'IBM Plex Mono', monospace;
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-  }
-  .cell-input.item-input{ font-weight: 500; }
-  .cell-input.value-input::placeholder{ color: var(--ink-faint); font-family: 'Inter', sans-serif;}
-
-  .row-del{
-    border: none;
-    background: transparent;
-    color: var(--ink-faint);
-    cursor: pointer;
-    font-size: 16px;
-    line-height: 1;
-    width: 26px; height: 26px;
-    border-radius: 6px;
-    transition: all 0.12s ease;
-  }
-  .row-del:hover{ color: var(--neg); background: var(--neg-soft); }
-
-  .add-row-btn{
-    display:flex;
-    align-items:center;
-    gap: 8px;
-    width: 100%;
-    background: transparent;
-    border: none;
-    border-top: 1px dashed var(--rule-strong);
-    color: var(--ink-soft);
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    padding: 12px 22px;
-    cursor: pointer;
-    transition: all 0.12s ease;
-  }
-  .add-row-btn:hover{ color: var(--margin); background: rgba(176,80,63,0.03); }
-  section.book.income .add-row-btn:hover{ color: var(--gold); background: rgba(156,122,44,0.04); }
-  .plus-sym{ font-family:'IBM Plex Mono', monospace; font-size: 15px; }
-
-  .empty-note{
-    padding: 22px;
-    text-align:center;
-    color: var(--ink-faint);
-    font-size: 13px;
-  }
-
-  footer{
-    text-align:center;
-    color: var(--ink-faint);
-    font-size: 12px;
-    margin-top: 30px;
-    font-family:'IBM Plex Mono', monospace;
-  }
-  footer button{
-    background:none;
-    border:none;
-    color: var(--ink-faint);
-    text-decoration: underline;
-    cursor:pointer;
-    font-family: inherit;
-    font-size: inherit;
-    padding: 0 4px;
-  }
-  footer button:hover{ color: var(--margin); }
-
-  .save-flag{
-    position: fixed;
-    bottom: 18px; right: 18px;
-    background: var(--ink);
-    color: var(--paper);
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 11.5px;
-    padding: 8px 14px;
-    border-radius: 20px;
-    opacity: 0;
-    transform: translateY(6px);
-    transition: opacity 0.25s ease, transform 0.25s ease;
-    pointer-events: none;
-  }
-  .save-flag.show{ opacity: 1; transform: translateY(0); }
-
-  @media (prefers-reduced-motion: reduce){
-    *{ transition: none !important; }
-  }
-
-  /* Header topo (menu + título) */
-  .top-bar{
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-    margin-bottom: 22px;
-  }
-  .top-bar-title{ flex: 1 1 auto; min-width: 0; }
-  .top-bar-title h1{ margin: 0 0 4px; }
-  .top-bar-title .eyebrow{ margin: 2px 0 6px; }
-  .top-bar-title .sub{ margin: 0; }
-
-  /* Menu hamburguer */
-  .menu-btn{
-    position: relative;
-    flex: 0 0 auto;
-    z-index: 40;
-    width: 40px; height: 40px;
-    border-radius: 10px;
-    border: 1px solid var(--rule-strong);
-    background: var(--sheet);
-    box-shadow: var(--shadow);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    cursor: pointer;
-  }
-  .menu-btn span{
-    display:block;
-    width: 18px; height: 2px;
-    background: var(--ink);
-    border-radius: 2px;
-    transition: transform 0.2s ease, opacity 0.2s ease;
-  }
-  .menu-btn[aria-expanded="true"] span:nth-child(1){ transform: translateY(6px) rotate(45deg); }
-  .menu-btn[aria-expanded="true"] span:nth-child(2){ opacity: 0; }
-  .menu-btn[aria-expanded="true"] span:nth-child(3){ transform: translateY(-6px) rotate(-45deg); }
-
-  .nav-overlay{
-    position: fixed;
-    inset: 0;
-    background: rgba(34,50,44,0.28);
-    z-index: 39;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease;
-  }
-  .nav-overlay.open{ opacity: 1; pointer-events: auto; }
-
-  .nav-panel{
-    position: fixed;
-    top: 0; left: 0; bottom: 0;
-    width: min(280px, 82vw);
-    background: var(--sheet);
-    box-shadow: 4px 0 18px rgba(34,50,44,0.14);
-    padding: 24px 18px 24px;
-    transform: translateX(-100%);
-    transition: transform 0.22s ease;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .nav-overlay.open .nav-panel{ transform: translateX(0); }
-
-  .nav-eyebrow{
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 10.5px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    margin: 0 8px 8px;
-  }
-  .nav-link{
-    text-align: left;
-    border: none;
-    background: transparent;
-    border-radius: 8px;
-    padding: 12px 10px;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    transition: background 0.15s ease;
-  }
-  .nav-link:hover{ background: rgba(34,50,44,0.045); }
-  .nav-link.active{ background: var(--gold-soft); }
-  .nav-link-title{
-    font-family:'Fraunces', serif;
-    font-weight: 600;
-    font-size: 16px;
-    color: var(--ink);
-  }
-  .nav-link-sub{
-    font-size: 12px;
-    color: var(--ink-soft);
-  }
-
-  /* Anual */
-  .anual-head{ margin-bottom: 22px; }
-  .year-card{
-    background: var(--sheet);
-    border-radius: 10px;
-    box-shadow: var(--shadow);
-    margin-bottom: 22px;
-    overflow: hidden;
-    border-left: 3px solid var(--rule-strong);
-  }
-  .year-head{
-    display:flex;
-    align-items: baseline;
-    justify-content: space-between;
-    padding: 18px 22px 14px;
-    border-bottom: 1px solid var(--rule);
-  }
-  .year-title{
-    font-family:'Fraunces', serif;
-    font-weight: 600;
-    font-size: 22px;
-    margin: 0;
-  }
-  .year-saldo{
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 15px;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-  }
-  .year-saldo.pos{ color: var(--pos); }
-  .year-saldo.neg{ color: var(--neg); }
-
-  .year-stats{
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0;
-  }
-  .year-stat{ padding: 16px 22px; }
-  .year-stat + .year-stat{ border-left: 1px solid var(--rule); }
-  .year-stat .stat-label{ margin-bottom: 6px; }
-  .year-stat .stat-value{ font-size: 20px; }
-  .year-stat.despesas .stat-value{ color: var(--margin); }
-  .year-stat.receitas .stat-value{ color: var(--gold); }
-
-  .year-breakdown{
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0;
-    border-top: 1px solid var(--rule);
-  }
-  .year-breakdown-col + .year-breakdown-col{ border-left: 1px solid var(--rule); }
-  .year-breakdown-title{
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 10.5px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    padding: 12px 22px 4px;
-  }
-  .year-item-row{
-    display:flex;
-    justify-content: space-between;
-    padding: 5px 22px;
-    font-size: 13px;
-  }
-  .year-item-row .yi-name{ color: var(--ink-soft); }
-  .year-item-row .yi-val{
-    font-family:'IBM Plex Mono', monospace;
-    font-variant-numeric: tabular-nums;
-    flex-shrink: 0;
-    padding-left: 12px;
-  }
-  .year-breakdown-empty{
-    padding: 8px 22px 14px;
-    font-size: 12.5px;
-    color: var(--ink-faint);
-  }
-  .year-breakdown-col:last-child .year-breakdown-empty,
-  .year-breakdown-col:last-child .year-item-row{ padding-bottom: 14px; }
-
-  .geral-panel{ margin-top: 4px; }
-
-  .anual-empty{
-    background: var(--sheet);
-    border-radius: 10px;
-    box-shadow: var(--shadow);
-    padding: 32px 22px;
-    text-align: center;
-    color: var(--ink-faint);
-    font-size: 14px;
-    margin-bottom: 22px;
-  }
-
-  @media (max-width: 560px){
-    .year-stats{ grid-template-columns: 1fr; }
-    .year-stat + .year-stat{ border-left: none; border-top: 1px solid var(--rule); }
-    .year-breakdown{ grid-template-columns: 1fr; }
-    .year-breakdown-col + .year-breakdown-col{ border-left: none; border-top: 1px solid var(--rule); }
-  }
-
-  @media (max-width: 560px){
-    thead th, tbody td, .book-head{ padding-left: 14px; padding-right: 14px; }
-    tbody td:first-child{ padding-left: 10px; padding-right: 2px; }
-    .stat-value{ font-size: 21px; }
-    thead th.col-day{ width: 40px; }
-    thead th.col-value{ width: 92px; padding-left: 6px; }
-    thead th.col-action{ width: 30px; }
-    table{ table-layout: fixed; }
-    tbody td:nth-child(2){ padding-left: 8px; padding-right: 4px; overflow: hidden; }
-    tbody td:nth-child(3){ padding-left: 4px; padding-right: 8px; }
-    .cell-input.item-input{ font-size: 13.5px; }
-    .cell-input.value-input{ font-size: 13px; padding-left: 0; }
-    .cell-input.value-input::placeholder{ font-size: 12px; }
-    tbody td:last-child{ padding-left: 0; padding-right: 8px; }
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saldo Simples</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
   <div class="nav-overlay" id="navOverlay">
@@ -555,6 +20,13 @@
         <span class="nav-link-title">Anual</span>
         <span class="nav-link-sub">soma de gastos por ano</span>
       </button>
+
+      <p class="nav-eyebrow" style="margin-top:14px;">Conta</p>
+      <button class="nav-link" id="navAuth" data-view="auth">
+        <span class="nav-link-title">Entrar / Cadastrar</span>
+        <span class="nav-link-sub">acessar sua conta</span>
+      </button>
+
       <p class="nav-eyebrow" style="margin-top:14px;">Dados</p>
       <button class="nav-link" id="navExport">
         <span class="nav-link-title">Exportar</span>
@@ -581,63 +53,63 @@
     </header>
 
     <div id="viewMensal">
-    <div class="tabs-row" id="tabsRow"></div>
+      <div class="tabs-row" id="tabsRow"></div>
 
-    <div class="panel">
-      <div class="stat despesas">
-        <p class="stat-label">Despesas</p>
-        <p class="stat-value" id="statDespesas">R$ 0,00</p>
-        <p class="stat-sub" id="statDespesasCount">0 itens</p>
+      <div class="panel">
+        <div class="stat despesas">
+          <p class="stat-label">Despesas</p>
+          <p class="stat-value" id="statDespesas">R$ 0,00</p>
+          <p class="stat-sub" id="statDespesasCount">0 itens</p>
+        </div>
+        <div class="stat receitas">
+          <p class="stat-label">Receitas</p>
+          <p class="stat-value" id="statReceitas">R$ 0,00</p>
+          <p class="stat-sub" id="statReceitasCount">0 itens</p>
+        </div>
+        <div class="stat saldo">
+          <p class="stat-label">Saldo final</p>
+          <p class="stat-value" id="statSaldo">R$ 0,00</p>
+          <p class="stat-sub" id="statSaldoSub">&nbsp;</p>
+        </div>
       </div>
-      <div class="stat receitas">
-        <p class="stat-label">Receitas</p>
-        <p class="stat-value" id="statReceitas">R$ 0,00</p>
-        <p class="stat-sub" id="statReceitasCount">0 itens</p>
-      </div>
-      <div class="stat saldo">
-        <p class="stat-label">Saldo final</p>
-        <p class="stat-value" id="statSaldo">R$ 0,00</p>
-        <p class="stat-sub" id="statSaldoSub">&nbsp;</p>
-      </div>
-    </div>
 
-    <section class="book expenses">
-      <div class="book-head">
-        <h2 class="book-title">Despesas</h2>
-        <span class="book-total" id="expTotalHead">R$ 0,00</span>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th class="col-day">Dia</th>
-            <th>Item</th>
-            <th class="col-value">Valor</th>
-            <th class="col-action"></th>
-          </tr>
-        </thead>
-        <tbody id="expensesBody"></tbody>
-      </table>
-      <button class="add-row-btn" id="addExpenseBtn"><span class="plus-sym">+</span> adicionar despesa</button>
-    </section>
+      <section class="book expenses">
+        <div class="book-head">
+          <h2 class="book-title">Despesas</h2>
+          <span class="book-total" id="expTotalHead">R$ 0,00</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th class="col-day">Dia</th>
+              <th>Item</th>
+              <th class="col-value">Valor</th>
+              <th class="col-action"></th>
+            </tr>
+          </thead>
+          <tbody id="expensesBody"></tbody>
+        </table>
+        <button class="add-row-btn" id="addExpenseBtn"><span class="plus-sym">+</span> adicionar despesa</button>
+      </section>
 
-    <section class="book income">
-      <div class="book-head">
-        <h2 class="book-title">Receitas</h2>
-        <span class="book-total" id="incTotalHead">R$ 0,00</span>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th class="col-day">Dia</th>
-            <th>Item</th>
-            <th class="col-value">Valor</th>
-            <th class="col-action"></th>
-          </tr>
-        </thead>
-        <tbody id="incomeBody"></tbody>
-      </table>
-      <button class="add-row-btn" id="addIncomeBtn"><span class="plus-sym">+</span> adicionar receita</button>
-    </section>
+      <section class="book income">
+        <div class="book-head">
+          <h2 class="book-title">Receitas</h2>
+          <span class="book-total" id="incTotalHead">R$ 0,00</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th class="col-day">Dia</th>
+              <th>Item</th>
+              <th class="col-value">Valor</th>
+              <th class="col-action"></th>
+            </tr>
+          </thead>
+          <tbody id="incomeBody"></tbody>
+        </table>
+        <button class="add-row-btn" id="addIncomeBtn"><span class="plus-sym">+</span> adicionar receita</button>
+      </section>
     </div>
 
     <div id="viewAnual" style="display:none;">
@@ -661,6 +133,43 @@
       </div>
     </div>
 
+    <div id="viewAuth" style="display:none;">
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tabLogin">Entrar</button>
+          <button class="auth-tab" id="tabRegister">Cadastrar</button>
+        </div>
+
+        <form id="formLogin" class="auth-form">
+          <div class="form-group">
+            <label for="loginEmail">E-mail</label>
+            <input type="email" id="loginEmail" required placeholder="seu@email.com">
+          </div>
+          <div class="form-group">
+            <label for="loginPassword">Senha</label>
+            <input type="password" id="loginPassword" required placeholder="••••••••">
+          </div>
+          <button type="submit" class="auth-submit">Entrar</button>
+        </form>
+
+        <form id="formRegister" class="auth-form" style="display:none;">
+          <div class="form-group">
+            <label for="regName">Nome completo</label>
+            <input type="text" id="regName" required placeholder="Seu nome">
+          </div>
+          <div class="form-group">
+            <label for="regEmail">E-mail</label>
+            <input type="email" id="regEmail" required placeholder="seu@email.com">
+          </div>
+          <div class="form-group">
+            <label for="regPassword">Senha</label>
+            <input type="password" id="regPassword" required placeholder="••••••••">
+          </div>
+          <button type="submit" class="auth-submit">Criar conta</button>
+        </form>
+      </div>
+    </div>
+
     <footer>
       dados salvos automaticamente &middot; 
       <button id="clearBtn">limpar exemplo</button> &middot; 
@@ -670,564 +179,6 @@
 
   <div class="save-flag" id="saveFlag">salvo</div>
 
-
-<script>
-(function(){
-  "use strict";
-
-  var STORAGE_KEY = "livro-caixa-dados-v2";
-  var CURRENT_SCHEMA_VERSION = 2;
-
-  var MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-
-  function monthLabel(key){
-    var parts = key.split("-");
-    var y = parts[0], m = parseInt(parts[1],10)-1;
-    return MONTH_NAMES[m] + "/" + y;
-  }
-  function monthShort(key){
-    var parts = key.split("-");
-    var m = parseInt(parts[1],10)-1;
-    return MONTH_NAMES[m].slice(0,3) + "/" + parts[0].slice(2);
-  }
-
-  function seedData(){
-    var months = [
-      "2026-08","2026-09","2026-10","2026-11","2026-12",
-      "2027-01","2027-02","2027-03"
-    ];
-    var expenses = [
-      { id:"e1", day:5, item:"Aluguel e Condomínio", values:{"2026-08":1200,"2026-09":1200,"2026-10":1200,"2026-11":1200,"2026-12":1200,"2027-01":1200,"2027-02":1200,"2027-03":1200} },
-      { id:"e2", day:10, item:"Energia e Água", values:{"2026-08":250,"2026-09":280,"2026-10":240,"2026-11":260,"2026-12":300,"2027-01":290,"2027-02":270,"2027-03":250} },
-      { id:"e3", day:12, item:"Internet e Celular", values:{"2026-08":120,"2026-09":120,"2026-10":120,"2026-11":120,"2026-12":120,"2027-01":120,"2027-02":120,"2027-03":120} },
-      { id:"e4", day:15, item:"Supermercado", values:{"2026-08":850,"2026-09":900,"2026-10":820,"2026-11":880,"2026-12":1100,"2027-01":800,"2027-02":850,"2027-03":870} },
-      { id:"e5", day:20, item:"Cartão de Crédito", values:{"2026-08":450,"2026-09":620,"2026-10":380,"2026-11":510,"2026-12":890,"2027-01":400,"2027-02":430,"2027-03":490} }
-    ];
-    var income = [
-      { id:"r1", day:5, item:"Salário", values:{"2026-08":3500,"2026-09":3500,"2026-10":3500,"2026-11":3500,"2026-12":3500,"2027-01":3500,"2027-02":3500,"2027-03":3500} },
-      { id:"r2", day:15, item:"Serviços Extra / Freelance", values:{"2026-08":600,"2026-09":450,"2026-10":800,"2026-11":300,"2026-12":1200,"2027-01":500,"2027-02":650,"2027-03":400} },
-      { id:"r3", day:25, item:"Rendimentos / Outros", values:{"2026-08":150,"2026-09":150,"2026-10":160,"2026-11":155,"2026-12":170,"2027-01":165,"2027-02":175,"2027-03":180} }
-    ];
-    return { version: CURRENT_SCHEMA_VERSION, months: months, selectedMonth: "2026-08", expenses: expenses, income: income, nextId: 100 };
-  }
-
-  function emptyData(){
-    var now = new Date();
-    var y = now.getFullYear();
-    var m = now.getMonth() + 1;
-    var currentKey = y + "-" + (m < 10 ? "0"+m : ""+m);
-    return { version: CURRENT_SCHEMA_VERSION, months: [currentKey], selectedMonth: currentKey, expenses: [], income: [], nextId: 1 };
-  }
-
-  var state = null;
-  var saveTimer = null;
-
-  var hasNativeStorage = (typeof window.storage !== 'undefined' && window.storage && typeof window.storage.get === 'function');
-
-  function storageGet(key){
-    if(hasNativeStorage){
-      return window.storage.get(key, false)
-        .then(function(res){ return res ? res.value : null; })
-        .catch(function(){ return null; });
-    }
-    try{
-      return Promise.resolve(window.localStorage.getItem(key));
-    }catch(e){
-      return Promise.resolve(null);
-    }
-  }
-
-  function storageSet(key, value){
-    if(hasNativeStorage){
-      return window.storage.set(key, value, false)
-        .then(function(res){ return !!res; })
-        .catch(function(){ return false; });
-    }
-    try{
-      window.localStorage.setItem(key, value);
-      return Promise.resolve(true);
-    }catch(e){
-      return Promise.resolve(false);
-    }
-  }
-
-  function nextMonthKey(key){
-    var parts = key.split("-");
-    var y = parseInt(parts[0],10), m = parseInt(parts[1],10);
-    m += 1;
-    if(m > 12){ m = 1; y += 1; }
-    return y + "-" + (m < 10 ? "0"+m : ""+m);
-  }
-
-  function fmtMoney(v){
-    return (v||0).toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
-  }
-
-  function flagSave(){
-    var el = document.getElementById('saveFlag');
-    el.classList.add('show');
-    clearTimeout(el._t);
-    el._t = setTimeout(function(){ el.classList.remove('show'); }, 1100);
-  }
-
-  function persist(){
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(function(){
-      storageSet(STORAGE_KEY, JSON.stringify(state)).then(function(ok){
-        if(ok) flagSave();
-      }).catch(function(err){ console.error("Erro ao salvar:", err); });
-    }, 250);
-  }
-
-  function sumMonth(list, monthKey){
-    var total = 0, count = 0;
-    for(var i=0;i<list.length;i++){
-      var v = list[i].values[monthKey];
-      if(typeof v === 'number' && !isNaN(v)){ total += v; count++; }
-    }
-    return { total: total, count: count };
-  }
-
-  function render(){
-    renderTabs();
-    renderPanel();
-    renderTable('expenses');
-    renderTable('income');
-  }
-
-  function renderTabs(){
-    var row = document.getElementById('tabsRow');
-    row.innerHTML = "";
-    if (!state.months || state.months.length === 0) {
-      var now = new Date();
-      var k = now.getFullYear() + "-" + (now.getMonth() + 1 < 10 ? "0" + (now.getMonth() + 1) : (now.getMonth() + 1));
-      state.months = [k];
-      state.selectedMonth = k;
-    }
-    state.months.forEach(function(mk){
-      var btn = document.createElement('button');
-      btn.className = 'tab' + (mk === state.selectedMonth ? ' active' : '');
-      btn.textContent = monthShort(mk);
-      btn.title = monthLabel(mk);
-      btn.addEventListener('click', function(){
-        state.selectedMonth = mk;
-        render();
-      });
-      row.appendChild(btn);
-    });
-    var addBtn = document.createElement('button');
-    addBtn.className = 'tab-add';
-    addBtn.textContent = '+';
-    addBtn.title = 'Adicionar próximo mês';
-    addBtn.addEventListener('click', function(){
-      var last = state.months[state.months.length-1];
-      var nk = nextMonthKey(last);
-      if(state.months.indexOf(nk) === -1){
-        state.months.push(nk);
-        state.selectedMonth = nk;
-        persist();
-        render();
-      }
-    });
-    row.appendChild(addBtn);
-  }
-
-  function renderPanel(){
-    var mk = state.selectedMonth;
-    var exp = sumMonth(state.expenses, mk);
-    var inc = sumMonth(state.income, mk);
-    var saldo = inc.total - exp.total;
-
-    document.getElementById('statDespesas').textContent = fmtMoney(exp.total);
-    document.getElementById('statDespesasCount').textContent = exp.count + (exp.count===1?' item':' itens') + ' em ' + monthLabel(mk);
-    document.getElementById('statReceitas').textContent = fmtMoney(inc.total);
-    document.getElementById('statReceitasCount').textContent = inc.count + (inc.count===1?' item':' itens') + ' em ' + monthLabel(mk);
-
-    var saldoEl = document.getElementById('statSaldo');
-    saldoEl.textContent = fmtMoney(saldo);
-    saldoEl.classList.toggle('pos', saldo >= 0);
-    saldoEl.classList.toggle('neg', saldo < 0);
-    document.getElementById('statSaldoSub').textContent = saldo >= 0 ? 'positivo' : 'negativo';
-
-    document.getElementById('expTotalHead').textContent = fmtMoney(exp.total);
-    document.getElementById('incTotalHead').textContent = fmtMoney(inc.total);
-  }
-
-  function renderTable(kind){
-    var rawList = kind === 'expenses' ? state.expenses : state.income;
-    var body = document.getElementById(kind === 'expenses' ? 'expensesBody' : 'incomeBody');
-    body.innerHTML = "";
-
-    var list = rawList.slice().sort(function(a, b){
-      var da = (a.day === null || a.day === undefined || isNaN(a.day)) ? 999 : a.day;
-      var db = (b.day === null || b.day === undefined || isNaN(b.day)) ? 999 : b.day;
-      return da - db;
-    });
-
-    if(list.length === 0){
-      var tr = document.createElement('tr');
-      var td = document.createElement('td');
-      td.colSpan = 4;
-      td.className = 'empty-note';
-      td.textContent = 'Nenhum item ainda.';
-      tr.appendChild(td);
-      body.appendChild(tr);
-      return;
-    }
-
-    list.forEach(function(row){
-      var tr = document.createElement('tr');
-
-      var tdDay = document.createElement('td');
-      var dayInput = document.createElement('input');
-      dayInput.type = 'number';
-      dayInput.min = 1; dayInput.max = 31;
-      dayInput.className = 'cell-input day-input';
-      dayInput.placeholder = '—';
-      dayInput.value = (row.day === null || row.day === undefined) ? '' : row.day;
-      dayInput.addEventListener('change', function(){
-        var v = parseInt(dayInput.value,10);
-        row.day = isNaN(v) ? null : Math.max(1, Math.min(31, v));
-        persist();
-        renderTable(kind);
-      });
-      tdDay.appendChild(dayInput);
-
-      var tdItem = document.createElement('td');
-      var itemInput = document.createElement('input');
-      itemInput.type = 'text';
-      itemInput.className = 'cell-input item-input';
-      itemInput.placeholder = 'nome do item';
-      itemInput.value = row.item || '';
-      itemInput.addEventListener('change', function(){
-        row.item = itemInput.value;
-        persist();
-      });
-      tdItem.appendChild(itemInput);
-
-      var tdVal = document.createElement('td');
-      var valInput = document.createElement('input');
-      valInput.type = 'number';
-      valInput.step = '0.01';
-      valInput.className = 'cell-input value-input';
-      valInput.placeholder = 'R$ —';
-      var curVal = row.values[state.selectedMonth];
-      valInput.value = (typeof curVal === 'number' && !isNaN(curVal)) ? curVal : '';
-      valInput.addEventListener('change', function(){
-        var v = parseFloat(valInput.value);
-        if(isNaN(v) || valInput.value === ''){
-          delete row.values[state.selectedMonth];
-        } else {
-          row.values[state.selectedMonth] = v;
-        }
-        persist();
-        renderPanel();
-      });
-      tdVal.appendChild(valInput);
-
-      var tdDel = document.createElement('td');
-      var delBtn = document.createElement('button');
-      delBtn.className = 'row-del';
-      delBtn.title = 'Remover item';
-      delBtn.textContent = '×';
-      delBtn.addEventListener('click', function(){
-        var targetArray = kind === 'expenses' ? state.expenses : state.income;
-        var idx = targetArray.indexOf(row);
-        if(idx > -1) {
-          targetArray.splice(idx, 1);
-        }
-        persist();
-        render();
-      });
-      tdDel.appendChild(delBtn);
-
-      tr.appendChild(tdDay);
-      tr.appendChild(tdItem);
-      tr.appendChild(tdVal);
-      tr.appendChild(tdDel);
-      body.appendChild(tr);
-    });
-  }
-
-  function addRow(kind){
-    var list = kind === 'expenses' ? state.expenses : state.income;
-    var id = (kind === 'expenses' ? 'e' : 'r') + (state.nextId++);
-    list.push({ id:id, day:null, item:'', values:{} });
-    persist();
-    render();
-    setTimeout(function(){
-      var body = document.getElementById(kind === 'expenses' ? 'expensesBody' : 'incomeBody');
-      var inputs = body.querySelectorAll('.item-input');
-      if(inputs.length) inputs[inputs.length-1].focus();
-    }, 30);
-  }
-
-  document.getElementById('addExpenseBtn').addEventListener('click', function(){ addRow('expenses'); });
-  document.getElementById('addIncomeBtn').addEventListener('click', function(){ addRow('income'); });
-
-  document.getElementById('resetBtn').addEventListener('click', function(){
-    if(confirm('Isso vai carregar os dados genéricos de exemplo. Deseja continuar?')){
-      state = seedData();
-      persist();
-      render();
-    }
-  });
-
-  document.getElementById('clearBtn').addEventListener('click', function(){
-    if(confirm('Certeza de que deseja limpar todos os registros e começar um livro-caixa em branco?')){
-      state = emptyData();
-      persist();
-      render();
-    }
-  });
-
-  var menuBtn = document.getElementById('menuBtn');
-  var navOverlay = document.getElementById('navOverlay');
-  var navMensal = document.getElementById('navMensal');
-  var navAnual = document.getElementById('navAnual');
-  var viewMensal = document.getElementById('viewMensal');
-  var viewAnual = document.getElementById('viewAnual');
-
-  function openMenu(){
-    navOverlay.classList.add('open');
-    menuBtn.setAttribute('aria-expanded', 'true');
-  }
-  function closeMenu(){
-    navOverlay.classList.remove('open');
-    menuBtn.setAttribute('aria-expanded', 'false');
-  }
-  menuBtn.addEventListener('click', function(){
-    navOverlay.classList.contains('open') ? closeMenu() : openMenu();
-  });
-  navOverlay.addEventListener('click', function(e){
-    if(e.target === navOverlay) closeMenu();
-  });
-
-  var pageTitle = document.getElementById('pageTitle');
-  var pageSub = document.getElementById('pageSub');
-
-  function showView(view){
-    if(view === 'anual'){
-      viewMensal.style.display = 'none';
-      viewAnual.style.display = 'block';
-      navAnual.classList.add('active');
-      navMensal.classList.remove('active');
-      pageTitle.textContent = 'Resumo anual';
-      pageSub.textContent = 'Total de despesas e receitas, separado por ano.';
-      renderAnual();
-    } else {
-      viewAnual.style.display = 'none';
-      viewMensal.style.display = 'block';
-      navMensal.classList.add('active');
-      navAnual.classList.remove('active');
-      pageTitle.textContent = 'Controle mensal';
-      pageSub.textContent = 'Despesas e receitas, mês a mês. Clique em qualquer campo para editar.';
-    }
-    closeMenu();
-  }
-  navMensal.addEventListener('click', function(){ showView('mensal'); });
-  navAnual.addEventListener('click', function(){ showView('anual'); });
-
-  var navExport = document.getElementById('navExport');
-  var navImport = document.getElementById('navImport');
-  var importFile = document.getElementById('importFile');
-
-  navExport.addEventListener('click', function(){
-    try{
-      var dataStr = JSON.stringify(state, null, 2);
-      var blob = new Blob([dataStr], { type: 'application/json' });
-      var url = URL.createObjectURL(blob);
-      var now = new Date();
-      var pad = function(n){ return n < 10 ? '0'+n : ''+n; };
-      var stamp = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate());
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = 'saldo-simples-backup-' + stamp + '.json';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(function(){ URL.revokeObjectURL(url); }, 500);
-    }catch(err){
-      alert('Não foi possível exportar os dados.');
-    }
-    closeMenu();
-  });
-
-  navImport.addEventListener('click', function(){
-    importFile.value = '';
-    importFile.click();
-  });
-
-  importFile.addEventListener('change', function(e){
-    var file = e.target.files && e.target.files[0];
-    if(!file) return;
-    var reader = new FileReader();
-    reader.onload = function(ev){
-      try{
-        var parsed = JSON.parse(ev.target.result);
-        var valid = parsed && Array.isArray(parsed.months) && Array.isArray(parsed.expenses) && Array.isArray(parsed.income);
-        if(!valid){
-          alert('Arquivo inválido. Verifique se é um backup do Saldo Simples.');
-          return;
-        }
-        if(confirm('Isso vai substituir todos os dados atuais pelos dados do arquivo importado. Deseja continuar?')){
-          parsed.version = CURRENT_SCHEMA_VERSION;
-          if(!parsed.selectedMonth || parsed.months.indexOf(parsed.selectedMonth) === -1){
-            parsed.selectedMonth = parsed.months[0] || parsed.selectedMonth;
-          }
-          if(typeof parsed.nextId !== 'number' || isNaN(parsed.nextId)){
-            parsed.nextId = 1;
-          }
-          state = parsed;
-          persist();
-          render();
-          closeMenu();
-        }
-      }catch(err){
-        alert('Não foi possível ler o arquivo. Verifique se é um JSON válido.');
-      }
-    };
-    reader.readAsText(file);
-  });
-
-  function renderAnual(){
-    var container = document.getElementById('anualYears');
-    container.innerHTML = "";
-
-    var years = [];
-    state.months.forEach(function(mk){
-      var y = mk.slice(0,4);
-      if(years.indexOf(y) === -1) years.push(y);
-    });
-    years.sort();
-
-    if(years.length === 0){
-      container.innerHTML = '<div class="anual-empty">Nenhum mês cadastrado ainda.</div>';
-    }
-
-    var geralDespesas = 0, geralReceitas = 0;
-
-    years.forEach(function(year){
-      var monthsInYear = state.months.filter(function(mk){ return mk.slice(0,4) === year; });
-
-      var expItems = sumItemsByYear(state.expenses, monthsInYear);
-      var incItems = sumItemsByYear(state.income, monthsInYear);
-      var expTotal = expItems.reduce(function(s,i){ return s+i.total; }, 0);
-      var incTotal = incItems.reduce(function(s,i){ return s+i.total; }, 0);
-      var saldo = incTotal - expTotal;
-
-      geralDespesas += expTotal;
-      geralReceitas += incTotal;
-
-      var card = document.createElement('div');
-      card.className = 'year-card';
-
-      var head = document.createElement('div');
-      head.className = 'year-head';
-      head.innerHTML =
-        '<h3 class="year-title">' + year + '</h3>' +
-        '<span class="year-saldo ' + (saldo >= 0 ? 'pos' : 'neg') + '">' + fmtMoney(saldo) + '</span>';
-      card.appendChild(head);
-
-      var stats = document.createElement('div');
-      stats.className = 'year-stats';
-      stats.innerHTML =
-        '<div class="year-stat despesas"><p class="stat-label">Despesas</p><p class="stat-value">' + fmtMoney(expTotal) + '</p></div>' +
-        '<div class="year-stat receitas"><p class="stat-label">Receitas</p><p class="stat-value">' + fmtMoney(incTotal) + '</p></div>';
-      card.appendChild(stats);
-
-      var breakdown = document.createElement('div');
-      breakdown.className = 'year-breakdown';
-      breakdown.appendChild(buildBreakdownCol('Despesas por item', expItems));
-      breakdown.appendChild(buildBreakdownCol('Receitas por item', incItems));
-      card.appendChild(breakdown);
-
-      container.appendChild(card);
-    });
-
-    var geralSaldo = geralReceitas - geralDespesas;
-    document.getElementById('geralDespesas').textContent = fmtMoney(geralDespesas);
-    document.getElementById('geralReceitas').textContent = fmtMoney(geralReceitas);
-    var gsEl = document.getElementById('geralSaldo');
-    gsEl.textContent = fmtMoney(geralSaldo);
-    gsEl.classList.toggle('pos', geralSaldo >= 0);
-    gsEl.classList.toggle('neg', geralSaldo < 0);
-    document.getElementById('geralSaldoSub').textContent = years.length ? (years[0] + (years.length>1 ? ' – ' + years[years.length-1] : '')) : '\u00A0';
-  }
-
-  function sumItemsByYear(list, monthsInYear){
-    var out = [];
-    list.forEach(function(row){
-      var total = 0;
-      monthsInYear.forEach(function(mk){
-        var v = row.values[mk];
-        if(typeof v === 'number' && !isNaN(v)) total += v;
-      });
-      if(total !== 0){
-        out.push({ item: row.item || '(sem nome)', total: total });
-      }
-    });
-    out.sort(function(a,b){ return b.total - a.total; });
-    return out;
-  }
-
-  function buildBreakdownCol(title, items){
-    var col = document.createElement('div');
-    col.className = 'year-breakdown-col';
-    var h = document.createElement('p');
-    h.className = 'year-breakdown-title';
-    h.textContent = title;
-    col.appendChild(h);
-    if(items.length === 0){
-      var empty = document.createElement('p');
-      empty.className = 'year-breakdown-empty';
-      empty.textContent = 'sem valores neste ano';
-      col.appendChild(empty);
-    } else {
-      items.forEach(function(it){
-        var row = document.createElement('div');
-        row.className = 'year-item-row';
-        row.innerHTML = '<span class="yi-name">' + escapeHtml(it.item) + '</span><span class="yi-val">' + fmtMoney(it.total) + '</span>';
-        col.appendChild(row);
-      });
-    }
-    return col;
-  }
-
-  function escapeHtml(str){
-    var div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-  }
-
-  function init(){
-    storageGet(STORAGE_KEY).then(function(value){
-      if(value){
-        try{
-          var parsed = JSON.parse(value);
-          if (parsed && parsed.version === CURRENT_SCHEMA_VERSION && parsed.months) {
-            state = parsed;
-          } else {
-            state = seedData();
-            persist();
-          }
-        }catch(e){
-          state = seedData();
-          persist();
-        }
-      } else {
-        state = seedData();
-        persist();
-      }
-      render();
-    }).catch(function(){
-      state = seedData();
-      render();
-    });
-  }
-
-  init();
-})();
-</script>
+  <script src="assets/js/app.js"></script>
 </body>
 </html>
