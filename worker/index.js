@@ -30,6 +30,18 @@ export default {
     try {
       // --- ROTA: REGISTRO ---
       if (path === '/api/register' && request.method === 'POST') {
+        // Valida o payload primeiro (custo zero no D1). Só chega ao rate-limit
+        // e ao registro da tentativa quem já mandou um corpo minimamente válido —
+        // isso tira do orçamento do D1 o ruído de bots/scanners batendo com JSON
+        // vazio ou malformado neste endpoint.
+        const { name, firstName, lastName, email, password } = await request.json().catch(() => ({}));
+        if (!email || !password || !(name || firstName)) {
+          return Response.json({ success: false, error: 'Preencha todos os campos.' }, { status: 400, headers: corsHeaders });
+        }
+        if (password.length < 8) {
+          return Response.json({ success: false, error: 'A senha precisa ter pelo menos 8 caracteres.' }, { status: 400, headers: corsHeaders });
+        }
+
         const registerAttempts = await countRecentAttempts(env, ip, 'register', 60);
         if (registerAttempts >= 8) {
           return Response.json(
@@ -38,14 +50,6 @@ export default {
           );
         }
         await recordAttempt(env, ip, 'register', true);
-
-        const { name, firstName, lastName, email, password } = await request.json();
-        if (!email || !password || !(name || firstName)) {
-          return Response.json({ success: false, error: 'Preencha todos os campos.' }, { status: 400, headers: corsHeaders });
-        }
-        if (password.length < 8) {
-          return Response.json({ success: false, error: 'A senha precisa ter pelo menos 8 caracteres.' }, { status: 400, headers: corsHeaders });
-        }
 
         const safeName = name || '';
         const finalFirstName = (firstName || safeName.split(' ')[0] || '').trim();
@@ -83,8 +87,15 @@ export default {
 
       // --- ROTA: LOGIN ---
       if (path === '/api/login' && request.method === 'POST') {
-        const { email, password } = await request.json();
+        const { email, password } = await request.json().catch(() => ({}));
         const normalizedEmail = (email || '').trim().toLowerCase();
+
+        // Corta aqui, antes de qualquer leitura/escrita no D1: requisição sem
+        // e-mail ou senha (comum em bots que só testam se o endpoint existe)
+        // não gera nenhuma operação de banco.
+        if (!normalizedEmail || !password) {
+          return Response.json({ success: false, error: 'Preencha e-mail e senha.' }, { status: 400, headers: corsHeaders });
+        }
 
         const failedByEmail = await countRecentAttempts(env, normalizedEmail, 'login', 15, true);
         const failedByIp = await countRecentAttempts(env, ip, 'login', 15, true);
