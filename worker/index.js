@@ -3,6 +3,7 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
+    // Configuração de CORS
     const allowedOrigin = env.ALLOWED_ORIGIN || '*';
     const corsHeaders = {
       'Access-Control-Allow-Origin': allowedOrigin,
@@ -10,12 +11,13 @@ export default {
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     };
 
+    // Tratamento de requisições Preflight (OPTIONS)
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders });
     }
 
+    // Validação da variável de ambiente SESSION_SECRET
     if (!env.SESSION_SECRET) {
-      // Sem essa chave, não é seguro emitir ou verificar tokens.
       return Response.json(
         { success: false, error: 'Servidor mal configurado (SESSION_SECRET ausente).' },
         { status: 500, headers: corsHeaders }
@@ -25,7 +27,7 @@ export default {
     const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
 
     try {
-      // API: CADASTRO
+      // --- ROTA: REGISTRO ---
       if (path === '/api/register' && request.method === 'POST') {
         const registerAttempts = await countRecentAttempts(env, ip, 'register', 60);
         if (registerAttempts >= 8) {
@@ -44,8 +46,6 @@ export default {
           return Response.json({ success: false, error: 'A senha precisa ter pelo menos 8 caracteres.' }, { status: 400, headers: corsHeaders });
         }
 
-        // Aceita tanto o formato novo (firstName/lastName) quanto um "name" único enviado direto,
-        // para não quebrar se algum cliente antigo ainda mandar só "name".
         const safeName = name || '';
         const finalFirstName = (firstName || safeName.split(' ')[0] || '').trim();
         const finalLastName = (lastName || safeName.split(' ').slice(1).join(' ') || '').trim();
@@ -68,7 +68,7 @@ export default {
         return Response.json({ success: true, token, name: finalName, firstName: finalFirstName }, { headers: corsHeaders });
       }
 
-      // API: LOGIN
+      // --- ROTA: LOGIN ---
       if (path === '/api/login' && request.method === 'POST') {
         const { email, password } = await request.json();
         const normalizedEmail = (email || '').trim().toLowerCase();
@@ -90,14 +90,13 @@ export default {
           return Response.json({ success: false, error: 'E-mail ou senha incorretos.' }, { status: 401, headers: corsHeaders });
         }
 
-        // Usuários cadastrados antes da migração podem não ter first_name salvo ainda.
         const firstName = user.first_name || (user.name || '').split(' ')[0] || '';
-
         const token = await generateToken(user.id, env.SESSION_SECRET);
+
         return Response.json({ success: true, token, name: user.name, firstName }, { headers: corsHeaders });
       }
 
-      // API: SINCRONIZAÇÃO
+      // --- ROTA: SINCRONIZAÇÃO ---
       if (path === '/api/sync') {
         const authHeader = request.headers.get('Authorization');
         const userId = await verifyToken(authHeader, env.SESSION_SECRET);
@@ -126,7 +125,7 @@ export default {
         }
       }
 
-      // SERVIR SITE E ARQUIVOS ESTÁTICOS (index.html, style.css, app.js)
+      // Servir arquivos estáticos do frontend se configurado
       if (env.ASSETS) {
         return await env.ASSETS.fetch(request);
       }
@@ -137,6 +136,8 @@ export default {
     }
   }
 };
+
+// --- SEGURANÇA E CRIPTOGRAFIA ---
 
 async function hashPassword(password) {
   const encoder = new TextEncoder();
@@ -172,10 +173,7 @@ async function verifyPassword(password, storedHash) {
   return hashHex === originalHash;
 }
 
-// --- TOKEN ASSINADO (HMAC-SHA256) ---
-// Formato do token: "<payload_base64>.<assinatura_base64>"
-// A assinatura garante que ninguém consiga forjar ou alterar um token sem
-// conhecer o SESSION_SECRET, que fica só no ambiente do Worker (nunca no código).
+// --- JWT ASSINADO (HMAC-SHA256) ---
 
 async function getSigningKey(secret) {
   const encoder = new TextEncoder();
@@ -227,19 +225,28 @@ async function verifyToken(token, secret) {
   }
 }
 
-// --- LIMITE DE TENTATIVAS (RATE LIMITING) ---
+// --- CONTROLE DE LIMITES (RATE LIMITING) ---
 
 async function recordAttempt(env, identifier, type, success) {
-  await env.DB.prepare("INSERT INTO auth_attempts (identifier, type, success) VALUES (?, ?, ?)")
-    .bind(identifier, type, success ? 1 : 0)
-    .run();
+  try {
+    await env.DB.prepare("INSERT INTO auth_attempts (identifier, type, success) VALUES (?, ?, ?)")
+      .bind(identifier, type, success ? 1 : 0)
+      .run();
+  } catch (e) {
+    console.error("Erro ao registrar tentativa:", e);
+  }
 }
 
 async function countRecentAttempts(env, identifier, type, windowMinutes, onlyFailed = false) {
-  const failedFilter = onlyFailed ? "AND success = 0" : "";
-  const row = await env.DB.prepare(
-    `SELECT COUNT(*) as count FROM auth_attempts
-     WHERE identifier = ? AND type = ? AND created_at > datetime('now', ?) ${failedFilter}`
-  ).bind(identifier, type, `-${windowMinutes} minutes`).first();
-  return row ? row.count : 0;
+  try {
+    const failedFilter = onlyFailed ? "AND success = 0" : "";
+    const row = await env.DB.prepare(
+      `SELECT COUNT(*) as count FROM auth_attempts
+       WHERE identifier = ? AND type = ? AND created_at > datetime('now', ?) ${failedFilter}`
+    ).bind(identifier, type, `-${windowMinutes} minutes`).first();
+    return row ? row.count : 0;
+  } catch (e) {
+    console.error("Erro ao contar tentativas:", e);
+    return 0;
+  }
 }

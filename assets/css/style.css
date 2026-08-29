@@ -901,6 +901,13 @@ button[disabled]{ cursor: not-allowed; opacity: 0.75; }
   background: var(--margin);
 }
 
+/* Esconde a mensagem de dados salvos e os botões de exemplo apenas na view de login/cadastro */
+#viewAuth #saveFlag,
+#viewAuth #clearBtn,
+#viewAuth #resetBtn {
+  display: none !important;
+}
+
 @media (max-width: 560px){
   .year-stats{ grid-template-columns: 1fr; }
   .year-stat + .year-stat{ border-left: none; border-top: 1px solid var(--rule); }

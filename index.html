@@ -1,5 +1,3 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,20 +5,29 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#10b981">
+  
   <!-- Forçar modo web app no iOS/Safari -->
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <!-- Define a cor da barra de status do celular -->
-  <meta name="theme-color" content="#F3F5EE">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+  <!-- Tag ÚNICA de cor da barra do navegador -->
+  <meta name="theme-color" id="themeColorMeta" content="#f8fafc">
+
   <link rel="stylesheet" href="assets/css/style.css">
+  
   <script>
-    // Aplica o tema salvo antes de pintar a página, para evitar o "flash" de tema errado.
+    // Aplica o tema salvo E a cor do navegador antes de renderizar a página
     (function(){
       try {
         var saved = localStorage.getItem('saldo_theme');
         var isDark = saved ? saved === 'dark' : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        var theme = isDark ? 'dark' : 'light';
+        var color = isDark ? '#1a2421' : '#f8fafc';
+        
+        document.documentElement.setAttribute('data-theme', theme);
+        
+        var meta = document.getElementById('themeColorMeta');
+        if (meta) meta.setAttribute('content', color);
       } catch(e){}
     })();
   </script>

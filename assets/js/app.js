@@ -3,7 +3,6 @@
 
   var STORAGE_KEY = "livro-caixa-dados-v2";
   var CURRENT_SCHEMA_VERSION = 2;
-
   var MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
   var currentUser = null;
@@ -20,6 +19,7 @@
     var y = parts[0], m = parseInt(parts[1],10)-1;
     return MONTH_NAMES[m] + "/" + y;
   }
+
   function monthShort(key){
     var parts = key.split("-");
     var m = parseInt(parts[1],10)-1;
@@ -107,7 +107,7 @@
     }
   }
 
-  // --- TOASTS (notificações não bloqueantes, substituem alert()) ---
+  // --- TOASTS ---
   var toastStack = document.getElementById('toastStack');
 
   function showToast(message, type, duration){
@@ -132,7 +132,7 @@
     setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 220);
   }
 
-  // --- MODAL (substitui confirm()/alert() nativos por um estilo consistente com o app) ---
+  // --- MODAL ---
   var modalOverlay = document.getElementById('modalOverlay');
   var modalTitleEl = document.getElementById('modalTitle');
   var modalMessageEl = document.getElementById('modalMessage');
@@ -158,26 +158,6 @@
       closeModalWith(false);
     }
   });
-
-  function showAlert(message, opts){
-    opts = opts || {};
-    return new Promise(function(resolve){
-      if(!modalOverlay){ window.alert(message); resolve(); return; }
-      modalResolve = function(){ resolve(); };
-      if(modalTitleEl) modalTitleEl.textContent = opts.title || 'Aviso';
-      if(modalMessageEl) modalMessageEl.textContent = message;
-      if(modalActionsEl){
-        modalActionsEl.innerHTML = '';
-        var okBtn = document.createElement('button');
-        okBtn.type = 'button';
-        okBtn.className = 'modal-btn primary';
-        okBtn.textContent = opts.okLabel || 'OK';
-        okBtn.addEventListener('click', function(){ closeModalWith(); });
-        modalActionsEl.appendChild(okBtn);
-      }
-      modalOverlay.classList.add('open');
-    });
-  }
 
   function showConfirm(message, opts){
     opts = opts || {};
@@ -208,7 +188,7 @@
     });
   }
 
-  // --- BOTÕES COM ESTADO DE CARREGAMENTO ---
+  // --- BOTÕES COM CARREGAMENTO ---
   function setBtnLoading(btn, loading, loadingLabel){
     if(!btn) return;
     var spinner = btn.querySelector('.btn-spinner');
@@ -225,7 +205,7 @@
     }
   }
 
-  // --- MODO CLARO / ESCURO ---
+// --- MODO CLARO / ESCURO (COM ATUALIZAÇÃO DA BARRA MÓVEL) ---
   var THEME_STORAGE_KEY = 'saldo_theme';
 
   function getCurrentTheme(){
@@ -235,6 +215,12 @@
   function applyTheme(theme){
     document.documentElement.setAttribute('data-theme', theme);
     try{ localStorage.setItem(THEME_STORAGE_KEY, theme); }catch(e){}
+
+    // Sincroniza a barra do celular com a cor REAL do fundo (#1a2421 no escuro, #f8fafc no claro)
+    var metaThemeColor = document.getElementById('themeColorMeta');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', theme === 'dark' ? '#1a2421' : '#f8fafc');
+    }
 
     var toggles = document.querySelectorAll('.theme-toggle-btn');
     for(var i = 0; i < toggles.length; i++){
@@ -250,9 +236,12 @@
       applyTheme(getCurrentTheme() === 'dark' ? 'light' : 'dark');
     });
   }
-  applyTheme(getCurrentTheme());
+  
+  // Aplica o tema salvo ou o padrão do atributo já inserido pelo HEAD
+  var currentSavedTheme = getCurrentTheme();
+  applyTheme(currentSavedTheme);
 
-  // INTEGRAÇÃO COM A NUVEM (CLOUDFLARE WORKERS / D1)
+  // --- INTEGRAÇÃO COM A NUVEM ---
   var lastCloudErrorToastAt = 0;
 
   function saveToCloud() {
@@ -673,7 +662,7 @@
     })(viewTriggers[vt]);
   }
 
-  // AUTENTICAÇÃO E FORMULÁRIOS
+  // --- AUTENTICAÇÃO E FORMULÁRIOS CORRIGIDOS ---
   var tabLogin = document.getElementById('tabLogin');
   var tabRegister = document.getElementById('tabRegister');
   var formLogin = document.getElementById('formLogin');
@@ -698,9 +687,9 @@
   }
 
   if(formLogin) {
-    var loginSubmitBtn = document.getElementById('loginSubmitBtn');
     formLogin.addEventListener('submit', function(e){
       e.preventDefault();
+      var loginSubmitBtn = document.getElementById('loginSubmitBtn');
       var inputs = formLogin.querySelectorAll('input');
       var email = inputs[0].value;
       var password = inputs[1].value;
@@ -712,7 +701,11 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email, password: password })
       })
-      .then(function(res){ return res.json(); })
+      .then(function(res){ 
+        return res.json().catch(function(){ 
+          throw new Error('Resposta do servidor inválida'); 
+        }); 
+      })
       .then(function(data){
         if(data.success) {
           currentUser = { token: data.token, name: data.name, firstName: data.firstName || (data.name || '').split(' ')[0] };
@@ -722,26 +715,26 @@
           updateAccountUI();
           showToast('Login efetuado com sucesso!', 'success');
           setBtnLoading(loginSubmitBtn, true, 'Sincronizando...');
-          loadFromCloud().then(function(){
-            setBtnLoading(loginSubmitBtn, false);
+          return loadFromCloud().then(function(){
             showView('mensal');
           });
         } else {
-          setBtnLoading(loginSubmitBtn, false);
           showToast(data.error || 'Falha no login', 'error');
         }
       })
-      .catch(function(){
+      .catch(function(err){
+        showToast(err.message === 'Resposta do servidor inválida' ? 'Erro interno no servidor (500).' : 'Erro ao conectar ao servidor.', 'error');
+      })
+      .finally(function(){
         setBtnLoading(loginSubmitBtn, false);
-        showToast('Erro ao conectar ao servidor.', 'error');
       });
     });
   }
 
   if(formRegister) {
-    var registerSubmitBtn = document.getElementById('registerSubmitBtn');
     formRegister.addEventListener('submit', function(e){
       e.preventDefault();
+      var registerSubmitBtn = document.getElementById('registerSubmitBtn');
       var firstNameInput = document.getElementById('regFirstName');
       var lastNameInput = document.getElementById('regLastName');
       var firstName = (firstNameInput ? firstNameInput.value : '').trim();
@@ -757,7 +750,11 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: name, firstName: firstName, lastName: lastName, email: email, password: password })
       })
-      .then(function(res){ return res.json(); })
+      .then(function(res){ 
+        return res.json().catch(function(){ 
+          throw new Error('Resposta do servidor inválida'); 
+        }); 
+      })
       .then(function(data){
         if(data.success) {
           currentUser = { token: data.token, name: data.name || name, firstName: data.firstName || firstName };
@@ -767,16 +764,16 @@
           showToast('Cadastro realizado com sucesso!', 'success');
           saveToCloud();
           updateAccountUI();
-          setBtnLoading(registerSubmitBtn, false);
           showView('mensal');
         } else {
-          setBtnLoading(registerSubmitBtn, false);
           showToast(data.error || 'Falha no cadastro', 'error');
         }
       })
-      .catch(function(){
+      .catch(function(err){
+        showToast(err.message === 'Resposta do servidor inválida' ? 'Erro interno no servidor (500).' : 'Erro ao conectar ao servidor.', 'error');
+      })
+      .finally(function(){
         setBtnLoading(registerSubmitBtn, false);
-        showToast('Erro ao conectar ao servidor.', 'error');
       });
     });
   }
