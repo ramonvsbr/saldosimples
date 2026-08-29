@@ -1,0 +1,12 @@
+# Cloudflare / Wrangler
+.wrangler/
+.dev.vars
+
+# Logs e arquivos do sistema
+*.log
+.DS_Store
+Thumbs.db
+
+# Backups ou exportações locais contendo dados
+*.json.bak
+*.local.sqlite
