@@ -1,6 +1,20 @@
 (function(){
   "use strict";
 
+  // Os blocos "Conta", "Dados" e "Aparência" existem uma única vez no HTML
+  // (como <template>) e são clonados aqui para o menu lateral (desktop) e
+  // para o menu suspenso (mobile), evitando manter dois HTMLs idênticos.
+  (function fillNavSlots(){
+    var slots = document.querySelectorAll('.nav-slot[data-tpl]');
+    for(var i = 0; i < slots.length; i++){
+      var slot = slots[i];
+      var tpl = document.getElementById(slot.getAttribute('data-tpl'));
+      if(tpl && tpl.content){
+        slot.appendChild(tpl.content.cloneNode(true));
+      }
+    }
+  })();
+
   var STORAGE_KEY = "livro-caixa-dados-v2";
   var CURRENT_SCHEMA_VERSION = 2;
   var MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
@@ -188,23 +202,6 @@
     });
   }
 
-  // --- BOTÕES COM CARREGAMENTO ---
-  function setBtnLoading(btn, loading, loadingLabel){
-    if(!btn) return;
-    var spinner = btn.querySelector('.btn-spinner');
-    var label = btn.querySelector('.btn-label');
-    btn.disabled = loading;
-    if(spinner) spinner.hidden = !loading;
-    if(label){
-      if(loading){
-        if(label.dataset.originalText === undefined) label.dataset.originalText = label.textContent;
-        if(loadingLabel) label.textContent = loadingLabel;
-      } else if(label.dataset.originalText !== undefined){
-        label.textContent = label.dataset.originalText;
-      }
-    }
-  }
-
   // --- MODO CLARO / ESCURO ---
   var THEME_STORAGE_KEY = 'saldo_theme';
 
@@ -242,6 +239,43 @@
   // --- INTEGRAÇÃO COM A NUVEM ---
   var lastCloudErrorToastAt = 0;
 
+  // "Pendência de sincronização": true sempre que o estado local mudou e ainda
+  // não temos confirmação de que a nuvem tem essa versão. Fica em uma chave
+  // própria do localStorage (não dentro de `state`, que é o JSON enviado ao
+  // backend) para sobreviver a reloads e ser checada antes de puxar dados da
+  // nuvem por cima de alterações locais ainda não enviadas.
+  var PENDING_SYNC_KEY = 'saldo_pending_sync';
+  function markPendingSync(){ try{ localStorage.setItem(PENDING_SYNC_KEY, '1'); }catch(e){} }
+  function clearPendingSync(){ try{ localStorage.removeItem(PENDING_SYNC_KEY); }catch(e){} }
+  function hasPendingSync(){ try{ return localStorage.getItem(PENDING_SYNC_KEY) === '1'; }catch(e){ return false; } }
+
+  // Único lugar que grava/limpa os 3 itens de sessão no localStorage, para não
+  // repetir (e arriscar esquecer) esse trio em login, cadastro, logout e expiração.
+  function setSession(user){
+    currentUser = user;
+    try{
+      localStorage.setItem('saldo_token', user.token);
+      localStorage.setItem('saldo_user_name', user.name || '');
+      localStorage.setItem('saldo_user_first_name', user.firstName || '');
+    }catch(e){}
+    updateAccountUI();
+  }
+
+  function clearSession(){
+    currentUser = null;
+    try{
+      localStorage.removeItem('saldo_token');
+      localStorage.removeItem('saldo_user_name');
+      localStorage.removeItem('saldo_user_first_name');
+    }catch(e){}
+    updateAccountUI();
+  }
+
+  function handleSessionExpired(){
+    clearSession();
+    showToast('Sua sessão expirou. Faça login novamente para sincronizar.', 'error');
+  }
+
   function saveToCloud() {
     if (!currentUser || !currentUser.token) return;
     fetch('/api/sync', {
@@ -252,7 +286,12 @@
       },
       body: JSON.stringify(state)
     }).then(function(res){
+      if(res.status === 401 || res.status === 403){
+        handleSessionExpired();
+        return;
+      }
       if(!res.ok) throw new Error('sync-failed');
+      clearPendingSync();
     }).catch(function(err){
       console.error("Erro ao salvar na nuvem:", err);
       var now = Date.now();
@@ -263,6 +302,9 @@
     });
   }
 
+  // Busca os dados da conta na nuvem. Se este dispositivo tiver alterações
+  // locais ainda não enviadas (hasPendingSync), pergunta ao usuário antes de
+  // sobrescrever qualquer coisa, em vez de simplesmente descartá-las.
   function loadFromCloud() {
     if (!currentUser || !currentUser.token) {
       return Promise.resolve(false);
@@ -274,31 +316,46 @@
       }
     }).then(function(res){
       if(res.status === 401 || res.status === 403) {
-        localStorage.removeItem('saldo_token');
-        localStorage.removeItem('saldo_user_name');
-        localStorage.removeItem('saldo_user_first_name');
-        currentUser = null;
-        updateAccountUI();
-        showToast('Sua sessão expirou. Faça login novamente para sincronizar.', 'error');
+        handleSessionExpired();
         return null;
       }
       if(res.ok) return res.json();
       return null;
     }).then(function(cloudData){
-      if(cloudData){
+      if(!cloudData) return false;
+
+      function applyCloudData(){
         state = cloudData;
         ensureCurrentMonthSelected();
+        clearPendingSync();
         render();
         return true;
       }
-      return false;
+
+      if(hasPendingSync()){
+        return showConfirm(
+          'Este dispositivo tem alterações que ainda não foram enviadas para a nuvem. Deseja manter os dados deste dispositivo (serão enviados para a nuvem agora) ou usar os dados da nuvem (os dados deste dispositivo serão substituídos)?',
+          { title: 'Dados não sincronizados', confirmLabel: 'Manter deste dispositivo', cancelLabel: 'Usar da nuvem' }
+        ).then(function(keepLocal){
+          if(keepLocal){
+            clearPendingSync();
+            saveToCloud();
+            return true;
+          }
+          return applyCloudData();
+        });
+      }
+
+      return applyCloudData();
     }).catch(function(err){
       console.error("Erro ao carregar dados da nuvem:", err);
       return false;
     });
   }
 
-  function persist(){
+  function persist(opts){
+    opts = opts || {};
+    if(!opts.silent) markPendingSync();
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function(){
       storageSet(STORAGE_KEY, JSON.stringify(state)).then(function(ok){
@@ -702,6 +759,29 @@ function showView(view){
     });
   }
 
+  // Faz um POST de autenticação (login/cadastro) e devolve o JSON já parseado.
+  // Em caso de resposta não-JSON, rejeita com um erro marcado por `code`
+  // (em vez de comparar texto de mensagem, que quebraria se a mensagem mudasse).
+  function authRequest(url, payload){
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function(res){
+      return res.json().catch(function(){
+        var err = new Error('bad-response');
+        err.code = 'BAD_RESPONSE';
+        throw err;
+      });
+    });
+  }
+
+  function authErrorMessage(err){
+    return (err && err.code === 'BAD_RESPONSE')
+      ? 'Erro interno no servidor (500).'
+      : 'Erro ao conectar ao servidor.';
+  }
+
   if(formLogin) {
     formLogin.addEventListener('submit', function(e){
       e.preventDefault();
@@ -712,23 +792,10 @@ function showView(view){
 
       setBtnLoading(loginSubmitBtn, true, 'Entrando...');
 
-      fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, password: password })
-      })
-      .then(function(res){ 
-        return res.json().catch(function(){ 
-          throw new Error('Resposta do servidor inválida'); 
-        }); 
-      })
+      authRequest('/api/login', { email: email, password: password })
       .then(function(data){
         if(data.success) {
-          currentUser = { token: data.token, name: data.name, firstName: data.firstName || (data.name || '').split(' ')[0] };
-          localStorage.setItem('saldo_token', data.token);
-          localStorage.setItem('saldo_user_name', currentUser.name);
-          localStorage.setItem('saldo_user_first_name', currentUser.firstName);
-          updateAccountUI();
+          setSession({ token: data.token, name: data.name, firstName: data.firstName || (data.name || '').split(' ')[0] });
           showToast('Login efetuado com sucesso!', 'success');
           setBtnLoading(loginSubmitBtn, true, 'Sincronizando...');
           return loadFromCloud().then(function(){
@@ -739,7 +806,7 @@ function showView(view){
         }
       })
       .catch(function(err){
-        showToast(err.message === 'Resposta do servidor inválida' ? 'Erro interno no servidor (500).' : 'Erro ao conectar ao servidor.', 'error');
+        showToast(authErrorMessage(err), 'error');
       })
       .finally(function(){
         setBtnLoading(loginSubmitBtn, false);
@@ -761,32 +828,19 @@ function showView(view){
 
       setBtnLoading(registerSubmitBtn, true, 'Criando conta...');
 
-      fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name, firstName: firstName, lastName: lastName, email: email, password: password })
-      })
-      .then(function(res){ 
-        return res.json().catch(function(){ 
-          throw new Error('Resposta do servidor inválida'); 
-        }); 
-      })
+      authRequest('/api/register', { name: name, firstName: firstName, lastName: lastName, email: email, password: password })
       .then(function(data){
         if(data.success) {
-          currentUser = { token: data.token, name: data.name || name, firstName: data.firstName || firstName };
-          localStorage.setItem('saldo_token', data.token);
-          localStorage.setItem('saldo_user_name', currentUser.name);
-          localStorage.setItem('saldo_user_first_name', currentUser.firstName);
+          setSession({ token: data.token, name: data.name || name, firstName: data.firstName || firstName });
           showToast('Cadastro realizado com sucesso!', 'success');
           saveToCloud();
-          updateAccountUI();
           showView('mensal');
         } else {
           showToast(data.error || 'Falha no cadastro', 'error');
         }
       })
       .catch(function(err){
-        showToast(err.message === 'Resposta do servidor inválida' ? 'Erro interno no servidor (500).' : 'Erro ao conectar ao servidor.', 'error');
+        showToast(authErrorMessage(err), 'error');
       })
       .finally(function(){
         setBtnLoading(registerSubmitBtn, false);
@@ -812,11 +866,7 @@ function showView(view){
   }
 
   function doLogout(){
-    currentUser = null;
-    localStorage.removeItem('saldo_token');
-    localStorage.removeItem('saldo_user_name');
-    localStorage.removeItem('saldo_user_first_name');
-    updateAccountUI();
+    clearSession();
     closeSheet();
     showView('mensal');
   }
@@ -1039,12 +1089,12 @@ function showView(view){
       if (currentUser && currentUser.token) {
         loadFromCloud().then(function(loaded){
           if (!loaded) {
-            persist();
+            persist({ silent: true });
             render();
           }
         });
       } else {
-        persist();
+        persist({ silent: true });
         render();
       }
     }).catch(function(){

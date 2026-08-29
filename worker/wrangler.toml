@@ -10,3 +10,15 @@ binding = "ASSETS"
 binding = "DB"
 database_name = "saldosimples-db"
 database_id = "b9988dff-d632-4655-85b2-9ed3eb0a0fd7"
+
+# TROQUE pelo domínio real de produção (ex: "https://saldosimples.com").
+# Como o worker também serve o frontend (ver [assets] acima), isso não afeta
+# o uso normal do app; só impede que outros sites façam requisições à API
+# e leiam a resposta.
+[vars]
+ALLOWED_ORIGIN = "https://saldosimples.ramonvsbr.workers.dev/"
+
+# Limpeza diária da tabela auth_attempts (ver função scheduled() no index.js).
+# Roda todo dia às 03:00 UTC.
+[triggers]
+crons = ["0 3 * * *"]

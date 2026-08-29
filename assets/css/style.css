@@ -62,14 +62,6 @@ body{
 
 /* Header */
 header{ margin-bottom: 22px; }
-.eyebrow{
-  font-family:'IBM Plex Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--margin);
-  margin: 0 0 6px;
-}
 h1{
   font-family:'Fraunces', serif;
   font-optical-sizing: auto;
@@ -378,7 +370,6 @@ footer button:hover{ color: var(--margin); }
 }
 .top-bar-title{ flex: 1 1 auto; min-width: 0; }
 .top-bar-title h1{ margin: 0 0 4px; }
-.top-bar-title .eyebrow{ margin: 2px 0 6px; }
 .top-bar-title .sub{ margin: 0; }
 
 .nav-eyebrow{
@@ -489,20 +480,6 @@ footer button:hover{ color: var(--margin); }
 [data-theme="dark"] .theme-toggle-track{ background: var(--gold); }
 [data-theme="dark"] .theme-toggle-thumb{ transform: translateX(18px); }
 
-/* Botões com estado de carregamento (spinner) */
-.btn-spinner{
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.35);
-  border-top-color: currentColor;
-  display: inline-block;
-  animation: btn-spin 0.7s linear infinite;
-  vertical-align: -2px;
-  margin-right: 8px;
-}
-@keyframes btn-spin{ to{ transform: rotate(360deg); } }
-button[disabled]{ cursor: not-allowed; opacity: 0.75; }
 
 /* --- Modal customizado (substitui confirm()/alert() nativos) --- */
 .modal-overlay{
@@ -937,11 +914,11 @@ button[disabled]{ cursor: not-allowed; opacity: 0.75; }
 }
 
 .auth-card-title {
-  font-family: inherit; /* Garante a mesma fonte do restante do app */
+  font-family: 'Fraunces', serif; /* Mesmo padrão de título usado em .modal-title, .book-title, .nav-link-title e .year-title */
   font-size: 1.35rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--text-color, #1e293b);
+  color: var(--ink);
   margin: 0 0 6px 0;
 }
 
@@ -949,7 +926,7 @@ button[disabled]{ cursor: not-allowed; opacity: 0.75; }
   font-family: inherit; /* Garante a mesma fonte do restante do app */
   font-size: 0.875rem;
   font-weight: 400;
-  color: var(--text-sub, #64748b);
+  color: var(--ink-soft);
   margin: 0;
   line-height: 1.45;
 }

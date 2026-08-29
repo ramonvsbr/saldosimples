@@ -34,8 +34,10 @@
 </head>
 <body>
   <div class="app-shell">
-    <aside class="side-nav" id="sideNav">
-      <!-- CONTA / LOGIN NO TOPO -->
+    <!-- Templates compartilhados: os blocos "Conta", "Dados" e "Aparência" são
+         idênticos no menu lateral (desktop) e no menu suspenso (mobile), então
+         ficam definidos uma única vez aqui e são clonados via JS (ver app.js). -->
+    <template id="tplNavConta">
       <p class="nav-eyebrow">Conta</p>
       <button class="nav-link view-trigger auth-entry-btn" data-view="auth">
         <span class="nav-link-title">Entrar / Cadastrar</span>
@@ -50,6 +52,29 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
         </button>
       </div>
+    </template>
+    <template id="tplNavDados">
+      <p class="nav-eyebrow" style="margin-top:14px;">Dados</p>
+      <button class="nav-link action-export">
+        <span class="nav-link-title">Exportar</span>
+        <span class="nav-link-sub">baixar backup em .json</span>
+      </button>
+      <button class="nav-link action-import">
+        <span class="nav-link-title">Importar</span>
+        <span class="nav-link-sub">carregar backup em .json</span>
+      </button>
+    </template>
+    <template id="tplNavAparencia">
+      <p class="nav-eyebrow" style="margin-top:14px;">Aparência</p>
+      <button type="button" class="nav-link theme-toggle-btn" aria-pressed="false">
+        <span class="nav-link-title theme-toggle-label">Modo escuro</span>
+        <span class="theme-toggle-track"><span class="theme-toggle-thumb"></span></span>
+      </button>
+    </template>
+
+    <aside class="side-nav" id="sideNav">
+      <!-- CONTA / LOGIN NO TOPO -->
+      <div class="nav-slot" data-tpl="tplNavConta"></div>
 
       <!-- VISUALIZAÇÃO E DEMAIS ÍCONES EM BAIXO -->
       <p class="nav-eyebrow" style="margin-top:14px;">Navegar</p>
@@ -62,21 +87,8 @@
         <span class="nav-link-sub">soma de gastos por ano</span>
       </button>
 
-      <p class="nav-eyebrow" style="margin-top:14px;">Dados</p>
-      <button class="nav-link action-export">
-        <span class="nav-link-title">Exportar</span>
-        <span class="nav-link-sub">baixar backup em .json</span>
-      </button>
-      <button class="nav-link action-import">
-        <span class="nav-link-title">Importar</span>
-        <span class="nav-link-sub">carregar backup em .json</span>
-      </button>
-
-      <p class="nav-eyebrow" style="margin-top:14px;">Aparência</p>
-      <button type="button" class="nav-link theme-toggle-btn" aria-pressed="false">
-        <span class="nav-link-title theme-toggle-label">Modo escuro</span>
-        <span class="theme-toggle-track"><span class="theme-toggle-thumb"></span></span>
-      </button>
+      <div class="nav-slot" data-tpl="tplNavDados"></div>
+      <div class="nav-slot" data-tpl="tplNavAparencia"></div>
     </aside>
     
     <div class="wrap" id="app">
@@ -191,7 +203,7 @@
         <input type="password" id="loginPassword" required placeholder="••••••••">
       </div>
       <button type="submit" class="auth-submit" id="loginSubmitBtn">
-        <span class="btn-spinner" hidden></span><span class="btn-label">Entrar</span>
+        <span class="btn-label">Entrar</span>
       </button>
     </form>
 
@@ -215,7 +227,7 @@
         <input type="password" id="regPassword" required placeholder="••••••••">
       </div>
       <button type="submit" class="auth-submit" id="registerSubmitBtn">
-        <span class="btn-spinner" hidden></span><span class="btn-label">Criar conta</span>
+        <span class="btn-label">Criar conta</span>
       </button>
     </form>
   </div>
@@ -251,34 +263,9 @@
   <div class="sheet-overlay" id="sheetOverlay">
     <div class="bottom-sheet" id="bottomSheet">
       <span class="sheet-handle"></span>
-      <button class="nav-link view-trigger auth-entry-btn" data-view="auth">
-        <span class="nav-link-title">Entrar / Cadastrar</span>
-        <span class="nav-link-sub">acessar sua conta</span>
-      </button>
-      <div class="nav-link account-logged-btn" style="display:none;">
-        <div class="account-logged-info">
-          <span class="nav-link-title account-logged-name">Usuário</span>
-          <span class="nav-link-sub">conectado</span>
-        </div>
-        <button type="button" class="account-logout-btn" title="Sair da conta">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-        </button>
-      </div>
-      <p class="nav-eyebrow" style="margin-top:10px;">Dados</p>
-      <button class="nav-link action-export">
-        <span class="nav-link-title">Exportar</span>
-        <span class="nav-link-sub">baixar backup em .json</span>
-      </button>
-      <button class="nav-link action-import">
-        <span class="nav-link-title">Importar</span>
-        <span class="nav-link-sub">carregar backup em .json</span>
-      </button>
-
-      <p class="nav-eyebrow" style="margin-top:10px;">Aparência</p>
-      <button type="button" class="nav-link theme-toggle-btn" aria-pressed="false">
-        <span class="nav-link-title theme-toggle-label">Modo escuro</span>
-        <span class="theme-toggle-track"><span class="theme-toggle-thumb"></span></span>
-      </button>
+      <div class="nav-slot" data-tpl="tplNavConta"></div>
+      <div class="nav-slot" data-tpl="tplNavDados"></div>
+      <div class="nav-slot" data-tpl="tplNavAparencia"></div>
     </div>
   </div>
 
