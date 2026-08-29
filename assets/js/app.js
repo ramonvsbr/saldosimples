@@ -834,6 +834,14 @@ function showView(view){
   if(formRegister) {
     formRegister.addEventListener('submit', function(e){
       e.preventDefault();
+
+      // Validação da checkbox dos Termos
+      var regTerms = document.getElementById('regTerms');
+      if (regTerms && !regTerms.checked) {
+        showToast('Você precisa aceitar os Termos e a Política para criar a conta.', 'error');
+        return;
+      }
+
       var registerSubmitBtn = document.getElementById('registerSubmitBtn');
       var firstNameInput = document.getElementById('regFirstName');
       var lastNameInput = document.getElementById('regLastName');

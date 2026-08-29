@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,89 +8,312 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
-  <!-- Forçar modo web app no iOS/Safari -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  
-  <!-- Tag ÚNICA de cor da barra do navegador -->
   <meta name="theme-color" id="themeColorMeta" content="#f8fafc">
-
   <link rel="stylesheet" href="assets/css/style.css">
   
   <script>
-    // Aplica o tema salvo E a cor do navegador antes de renderizar a página
     (function(){
       try {
         var saved = localStorage.getItem('saldo_theme');
         var isDark = saved ? saved === 'dark' : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
         var theme = isDark ? 'dark' : 'light';
         var color = isDark ? '#1a2421' : '#f8fafc';
-        
         document.documentElement.setAttribute('data-theme', theme);
-        
         var meta = document.getElementById('themeColorMeta');
         if (meta) meta.setAttribute('content', color);
       } catch(e){}
     })();
   </script>
+
+  <style>
+    /* Reset & Inherit Fonts from CSS Variables/System */
+    body {
+      font-family: var(--font-sans, 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: var(--bg-body, #0f172a);
+      color: var(--text-main, #f8fafc);
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      box-sizing: border-box;
+    }
+
+    .app-header {
+      width: 100%;
+      margin-bottom: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .page-title {
+      font-family: var(--font-serif, 'Fraunces', Georgia, serif);
+      font-size: 2.25rem;
+      font-weight: 700;
+      margin: 0.5rem 0 0 0;
+      color: var(--text-heading, #ffffff);
+    }
+
+    .content-body {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .card {
+      width: 100%;
+      background: var(--bg-card, #1e293b);
+      border: 1px solid var(--border-color, #334155);
+      border-radius: 16px;
+      padding: 1.75rem 1.5rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .card h2 {
+      font-family: var(--font-serif, 'Fraunces', Georgia, serif);
+      font-size: 1.35rem;
+      margin-top: 0;
+      margin-bottom: 1rem;
+      color: var(--text-heading, #ffffff);
+    }
+
+    .card p {
+      font-size: 0.975rem;
+      line-height: 1.6;
+      color: var(--text-muted, #cbd5e1);
+      margin: 0 0 0.75rem 0;
+    }
+
+    .info-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      text-align: center;
+      width: 100%;
+    }
+
+    .info-list li {
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--text-muted, #cbd5e1);
+    }
+
+    .info-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    code {
+      font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+      background: rgba(255, 255, 255, 0.08);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+    }
+
+    /* Form styling for Contato */
+    .app-form {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      align-items: center;
+    }
+
+    .form-group {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .form-group label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+      color: var(--text-main, #f8fafc);
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color, #334155);
+      background: var(--bg-input, #0f172a);
+      color: var(--text-main, #ffffff);
+      font-family: inherit;
+      font-size: 0.95rem;
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    textarea.form-input {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 0.85rem;
+      border-radius: 8px;
+      border: none;
+      background: #0284c7;
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      background: #0369a1;
+    }
+
+    /* Global link reset & Back link */
+    a, a:visited {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .back-link, 
+    .back-link:visited,
+    .back-link:hover,
+    .back-link:active {
+      color: #38bdf8 !important;
+      text-decoration: none !important;
+      font-size: 0.95rem;
+      font-weight: 500;
+      display: inline-block;
+      margin-bottom: 0.5rem;
+    }
+
+    .back-link:hover {
+      text-decoration: underline !important;
+      color: #7dd3fc !important;
+    }
+
+    /* Footer styling */
+    .app-footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+      width: 100%;
+      text-align: center;
+    }
+
+    .app-footer nav.footer-nav {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.9rem;
+    }
+
+    .app-footer nav.footer-nav a,
+    .app-footer nav.footer-nav a:visited {
+      color: #94a3b8 !important;
+      text-decoration: none !important;
+      transition: color 0.2s ease;
+    }
+
+    .app-footer nav.footer-nav a:hover,
+    .app-footer nav.footer-nav a:active {
+      color: #f1f5f9 !important;
+      text-decoration: underline !important;
+    }
+
+    .app-footer p {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin: 0;
+    }
+  </style>
+
 </head>
 <body>
-    <div class="container">
-        header>
-            <h1>Contato e Suporte</h1>
-            <p class="subtitle">Dúvidas, sugestões ou suporte técnico? Estamos à disposição.</p>
-        </header>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="header-content">
+        <a href="index.html" class="back-link">&larr; Voltar ao App</a>
+        <h1 class="page-title">Contato e Suporte</h1>
+      </div>
+    </header>
 
-        <main>
-            <section class="card">
-                <h2>Canais de Atendimento</h2>
-                <p>Para dúvidas sobre o aplicativo, relatórios de falhas técnicas ou solicitações de privacidade (LGPD), entre em contato via e-mail ou utilize o formulário abaixo.</p>
-                <p><strong>E-mail Oficial:</strong> suporte@saldosimples.com</p>
-            </section>
+    <main class="content-body">
+      <section class="card">
+        <h2>Canais de Atendimento</h2>
+        <p>Precisa de suporte técnico, quer relatar uma falha ou exercer seus direitos de privacidade (LGPD)? Fale conosco via e-mail ou pelo formulário abaixo.</p>
+        <p><strong>E-mail Direto:</strong> <code>suporte@saldosimples.com</code></p>
+      </section>
 
-            <section class="card">
-                <h2>Envie uma Mensagem</h2>
-                <form action="#" method="POST" onsubmit="event.preventDefault(); alert('Mensagem enviada com sucesso!');">
-                    <div class="form-group">
-                        <label for="nome">Nome Completo</label>
-                        <input type="text" id="nome" name="nome" required placeholder="Seu nome">
-                    </div>
+      <section class="card">
+        <h2>Envie sua Mensagem</h2>
+        <form class="app-form" action="#" method="POST" onsubmit="event.preventDefault(); alert('Mensagem enviada com sucesso!');">
+          <div class="form-group">
+            <label for="nome">Nome Completo</label>
+            <input type="text" id="nome" name="nome" class="form-input" required placeholder="Seu nome">
+          </div>
 
-                    <div class="form-group">
-                        <label for="email">E-mail de Contato</label>
-                        <input type="email" id="email" name="email" required placeholder="seu@email.com">
-                    </div>
+          <div class="form-group">
+            <label for="email">E-mail de Contato</label>
+            <input type="email" id="email" name="email" class="form-input" required placeholder="seu@email.com">
+          </div>
 
-                    <div class="form-group">
-                        <label for="assunto">Assunto</label>
-                        <select id="assunto" name="assunto">
-                            <option value="duvida">Dúvida Geral</option>
-                            <option value="suporte">Suporte Técnico / Bug</option>
-                            <option value="lgpd">Solicitação LGPD / Privacidade</option>
-                            <option value="sugestao">Sugestão de Funcionalidade</option>
-                        </select>
-                    </div>
+          <div class="form-group">
+            <label for="assunto">Assunto</label>
+            <select id="assunto" name="assunto" class="form-input">
+              <option value="duvida">Dúvida Geral</option>
+              <option value="suporte">Suporte Técnico / Relatório de Bug</option>
+              <option value="lgpd">Privacidade / LGPD</option>
+              <option value="sugestao">Sugestão de Melhoria</option>
+            </select>
+          </div>
 
-                    <div class="form-group">
-                        <label for="mensagem">Mensagem</label>
-                        <textarea id="mensagem" name="mensagem" required placeholder="Escreva sua mensagem aqui..."></textarea>
-                    </div>
+          <div class="form-group">
+            <label for="mensagem">Mensagem</label>
+            <textarea id="mensagem" name="mensagem" class="form-input" required placeholder="Como podemos ajudar?"></textarea>
+          </div>
 
-                    <button type="submit">Enviar Mensagem</button>
-                </form>
-            </section>
-        </main>
+          <button type="submit" class="btn btn-primary">Enviar Mensagem</button>
+        </form>
+      </section>
+    </main>
 
-        <footer>
-            <nav>
-                <a href="index.html">Início</a> |
-                <a href="sobre.html">Sobre</a> |
-                <a href="contato.html">Contato</a> |
-                <a href="privacidade.html">Privacidade</a> |
-                <a href="termos.html">Termos de Uso</a>
-            </nav>
-            <p>&copy; 2026 Saldo Simples. Todos os direitos reservados.</p>
-        </footer>
-    </div>
+    <footer class="app-footer">
+      <nav class="footer-nav">
+        <a href="index.html">Início</a> &bull;
+        <a href="sobre.html">Sobre</a> &bull;
+        <a href="contato.html">Contato</a> &bull;
+        <a href="privacidade.html">Privacidade</a> &bull;
+        <a href="termos.html">Termos de Uso</a>
+      </nav>
+      <p>&copy; 2026 Saldo Simples. Todos os direitos reservados.</p>
+    </footer>
+  </div>
 </body>
 </html>

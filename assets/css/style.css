@@ -933,3 +933,112 @@ footer button:hover{ color: var(--margin); }
   margin: 0;
   line-height: 1.45;
 }
+
+/* Rodapé Unificado */
+.app-footer {
+  display: flex;
+  flex-direction: column; /* Força cada bloco a ficar um abaixo do outro */
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  padding: 20px 16px;
+  box-sizing: border-box;
+}
+
+/* Linha de ações/dados */
+.footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.footer-actions button {
+  background: none;
+  border: none;
+  color: var(--ink-faint);
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0;
+  transition: color 0.15s ease;
+}
+
+.footer-actions button:hover {
+  color: var(--margin);
+}
+
+/* Linha de navegação (Links) */
+.footer-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+}
+
+.footer-nav a,
+.footer-nav a:visited {
+  color: var(--ink-soft) !important;
+  text-decoration: none !important;
+  font-size: 12.5px;
+  transition: color 0.15s ease;
+}
+
+.footer-nav a:hover,
+.footer-nav a:active {
+  color: var(--ink) !important;
+  text-decoration: underline !important;
+}
+
+/* Pontos separadores e copyright */
+.app-footer .dot {
+  color: var(--rule-strong);
+  user-select: none;
+}
+
+.footer-copy {
+  display: block;
+  width: 100%;
+  margin: 4px 0 0 0;
+  font-size: 11px;
+  color: var(--ink-faint);
+  text-align: center;
+
+/* Estilo da caixinha de Termos de Uso no cadastro */
+.form-group-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 4px 0 8px 0;
+}
+
+.form-group-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  cursor: pointer;
+  accent-color: var(--margin);
+}
+
+.form-group-checkbox label {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: var(--ink-soft);
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.form-group-checkbox label a {
+  color: var(--ink);
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.form-group-checkbox label a:hover {
+  color: var(--margin);
+}
