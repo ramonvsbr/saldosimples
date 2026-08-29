@@ -63,12 +63,11 @@ body{
 /* Header */
 header{ margin-bottom: 22px; }
 h1{
-  font-family:'Fraunces', serif;
-  font-optical-sizing: auto;
-  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
   font-size: 34px;
   margin: 0 0 4px;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
 }
 .sub{
   color: var(--ink-soft);
@@ -91,7 +90,7 @@ h1{
 
 .tab{
   flex: 0 0 auto;
-  font-family:'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 12.5px;
   padding: 9px 12px 8px 14px;
   background: var(--tab-inactive);
@@ -138,7 +137,7 @@ h1{
 
 .tab-add{
   flex: 0 0 auto;
-  font-family:'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 16px;
   line-height: 1;
   width: 34px; height: 34px;
@@ -167,7 +166,7 @@ h1{
 .stat{ padding: 4px 18px; position:relative; }
 .stat + .stat{ border-left: 1px solid var(--rule); }
 .stat-label{
-  font-family:'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 10.5px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -215,10 +214,11 @@ section.book.income{ border-left-color: rgba(156,122,44,0.35); }
   padding: 18px 22px 12px;
 }
 .book-title{
-  font-family:'Fraunces', serif;
-  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
   font-size: 19px;
   margin: 0;
+  letter-spacing: -0.01em;
 }
 .book-total{
   font-family:'IBM Plex Mono', monospace;
@@ -232,7 +232,7 @@ section.book.income .book-total{ color: var(--gold); }
 table{ width: 100%; border-collapse: collapse; }
 thead th{
   text-align: left;
-  font-family:'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 10.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -309,7 +309,7 @@ tbody td:first-child{ padding-left: 14px; padding-right: 4px; }
 }
 .add-row-btn:hover{ color: var(--margin); background: rgba(176,80,63,0.03); }
 section.book.income .add-row-btn:hover{ color: var(--gold); background: rgba(156,122,44,0.04); }
-.plus-sym{ font-family:'IBM Plex Mono', monospace; font-size: 15px; }
+.plus-sym{ font-family: 'Inter', sans-serif; font-size: 15px; }
 
 .empty-note{
   padding: 22px;
@@ -323,7 +323,7 @@ footer{
   color: var(--ink-faint);
   font-size: 12px;
   margin-top: 30px;
-  font-family:'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   background: var(--sheet);
   border-radius: 10px;
   padding: 14px 16px;
@@ -346,7 +346,7 @@ footer button:hover{ color: var(--margin); }
   bottom: 18px; right: 18px;
   background: var(--ink);
   color: var(--paper);
-  font-family:'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 11.5px;
   padding: 8px 14px;
   border-radius: 20px;
@@ -373,7 +373,7 @@ footer button:hover{ color: var(--margin); }
 .top-bar-title .sub{ margin: 0; }
 
 .nav-eyebrow{
-  font-family:'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 10.5px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -395,10 +395,11 @@ footer button:hover{ color: var(--margin); }
 .nav-link:hover{ background: rgba(var(--tint-rgb),0.045); }
 .nav-link.active{ background: var(--gold-soft); }
 .nav-link-title{
-  font-family:'Fraunces', serif;
-  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
   font-size: 16px;
   color: var(--ink);
+  letter-spacing: -0.01em;
 }
 .nav-link-sub{
   font-size: 12px;
@@ -508,11 +509,12 @@ footer button:hover{ color: var(--margin); }
 }
 .modal-overlay.open .modal-card{ transform: translateY(0) scale(1); }
 .modal-title{
-  font-family: 'Fraunces', serif;
-  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
   font-size: 18px;
   color: var(--ink);
   margin: 0 0 10px;
+  letter-spacing: -0.01em;
 }
 .modal-message{
   font-size: 14px;
@@ -530,7 +532,7 @@ footer button:hover{ color: var(--margin); }
   padding: 10px 18px;
   border-radius: 7px;
   border: none;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -650,7 +652,7 @@ footer button:hover{ color: var(--margin); }
     border: none;
     background: transparent;
     color: var(--ink-faint);
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'Inter', sans-serif;
     font-size: 10.5px;
     letter-spacing: 0.01em;
     padding: 6px 2px;
@@ -718,10 +720,11 @@ footer button:hover{ color: var(--margin); }
   border-bottom: 1px solid var(--rule);
 }
 .year-title{
-  font-family:'Fraunces', serif;
-  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
   font-size: 22px;
   margin: 0;
+  letter-spacing: -0.01em;
 }
 .year-saldo{
   font-family:'IBM Plex Mono', monospace;
@@ -752,7 +755,7 @@ footer button:hover{ color: var(--margin); }
 }
 .year-breakdown-col + .year-breakdown-col{ border-left: 1px solid var(--rule); }
 .year-breakdown-title{
-  font-family:'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 10.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -813,7 +816,7 @@ footer button:hover{ color: var(--margin); }
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 14px;
   color: var(--ink-soft);
   cursor: pointer;
@@ -846,7 +849,7 @@ footer button:hover{ color: var(--margin); }
   font-size: 12px;
   font-weight: 500;
   color: var(--ink-soft);
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
 }
 .form-group input {
   padding: 10px 12px;
@@ -869,7 +872,7 @@ footer button:hover{ color: var(--margin); }
   color: var(--paper);
   border: none;
   border-radius: 6px;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s ease;
@@ -914,10 +917,10 @@ footer button:hover{ color: var(--margin); }
 }
 
 .auth-card-title {
-  font-family: 'Fraunces', serif; /* Mesmo padrão de título usado em .modal-title, .book-title, .nav-link-title e .year-title */
+  font-family: 'Inter', sans-serif; /* Mesmo padrão de título usado em .modal-title, .book-title, .nav-link-title e .year-title */
   font-size: 1.35rem;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   color: var(--ink);
   margin: 0 0 6px 0;
 }
