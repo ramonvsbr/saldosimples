@@ -173,7 +173,7 @@ async function verifyPassword(password, storedHash) {
   return hashHex === originalHash;
 }
 
-// --- JWT ASSINADO (HMAC-SHA256) ---
+// --- JWT ASSINADO (HMAC-SHA256) - VERSÃO CORRIGIDA PARA CLOUDFLARE WORKERS ---
 
 async function getSigningKey(secret) {
   const encoder = new TextEncoder();
@@ -186,12 +186,24 @@ async function getSigningKey(secret) {
   );
 }
 
-function bufferToBase64(buffer) {
-  return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+function arrayBufferToBase64(buffer) {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
 }
 
-function base64ToBuffer(base64) {
-  return Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+function base64ToArrayBuffer(base64) {
+  const binaryString = atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes.buffer;
 }
 
 async function generateToken(userId, secret) {
@@ -200,21 +212,22 @@ async function generateToken(userId, secret) {
   const key = await getSigningKey(secret);
   const encoder = new TextEncoder();
   const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(payloadB64));
-  const signatureB64 = bufferToBase64(signature);
+  const signatureB64 = arrayBufferToBase64(signature);
   return `${payloadB64}.${signatureB64}`;
 }
 
 async function verifyToken(token, secret) {
   if (!token) return null;
   try {
-    const [payloadB64, signatureB64] = token.split('.');
-    if (!payloadB64 || !signatureB64) return null;
+    const parts = token.split('.');
+    if (parts.length !== 2) return null;
 
+    const [payloadB64, signatureB64] = parts;
     const key = await getSigningKey(secret);
     const encoder = new TextEncoder();
-    const signatureBytes = base64ToBuffer(signatureB64);
+    const signatureBuffer = base64ToArrayBuffer(signatureB64);
 
-    const valid = await crypto.subtle.verify("HMAC", key, signatureBytes, encoder.encode(payloadB64));
+    const valid = await crypto.subtle.verify("HMAC", key, signatureBuffer, encoder.encode(payloadB64));
     if (!valid) return null;
 
     const payload = JSON.parse(atob(payloadB64));
