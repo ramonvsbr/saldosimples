@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Política de Privacidade | Saldo Simples</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+  <!-- Forçar modo web app no iOS/Safari -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+  <!-- Tag ÚNICA de cor da barra do navegador -->
+  <meta name="theme-color" id="themeColorMeta" content="#f8fafc">
+
+  <link rel="stylesheet" href="assets/css/style.css">
+  
+  <script>
+    // Aplica o tema salvo E a cor do navegador antes de renderizar a página
+    (function(){
+      try {
+        var saved = localStorage.getItem('saldo_theme');
+        var isDark = saved ? saved === 'dark' : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        var theme = isDark ? 'dark' : 'light';
+        var color = isDark ? '#1a2421' : '#f8fafc';
+        
+        document.documentElement.setAttribute('data-theme', theme);
+        
+        var meta = document.getElementById('themeColorMeta');
+        if (meta) meta.setAttribute('content', color);
+      } catch(e){}
+    })();
+  </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Política de Privacidade</h1>
+            <p class="subtitle">Última atualização: 29 de Agosto de 2026</p>
+        </header>
+
+        <main>
+            <section class="card">
+                <h2>1. Introdução</h2>
+                <p>O <strong>Saldo Simples</strong> está comprometido com a proteção da sua privacidade. Esta Política de Privacidade descreve como suas informações pessoais são coletadas, utilizadas e protegidas em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).</p>
+            </section>
+
+            <section class="card">
+                <h2>2. Coleta de Dados</h2>
+                <p>Coletamos apenas as informações estritamente necessárias para a prestação do serviço:</p>
+                <ul>
+                    <li><strong>Dados de Conta:</strong> Endereço de e-mail e senha (armazenada de forma criptografada via hash PBKDF2/SHA-256 com salt).</li>
+                    <li><strong>Dados Financeiros:</strong> Registros de receitas, despesas e categorias informados voluntariamente por você.</li>
+                    <li><strong>Dados Técnicos:</strong> Registros de acesso (IP, tipo de navegador e timestamps) utilizados exclusivamente para rate-limiting e segurança.</li>
+                </ul>
+            </section>
+
+            <section class="card">
+                <h2>3. Armazenamento Offline e Nuvem</h2>
+                <p>Para viabilizar o funcionamento PWA (Progressive Web App):</p>
+                <ul>
+                    <li>Seus dados são armazenados localmente no seu dispositivo através da tecnologia <code>localStorage</code> e <code>Cache API</code>.</li>
+                    <li>Quando conectado à internet, os dados são sincronizados e mantidos em infraestrutura de banco de dados serverless (Cloudflare D1).</li>
+                </ul>
+            </section>
+
+            <section class="card">
+                <h2>4. Compartilhamento de Dados</h2>
+                <p>O Saldo Simples <strong>não vende, aluga ou compartilha</strong> seus dados pessoais ou registros financeiros com terceiros para fins publicitários ou comerciais. Os dados são processados apenas por fornecedores de infraestrutura técnica essencial (Cloudflare Workers).</p>
+            </section>
+
+            <section class="card">
+                <h2>5. Seus Direitos (LGPD)</h2>
+                <p>Como titular dos dados, você tem o direito de:</p>
+                <ul>
+                    <li>Confirmar a existência de tratamento e acessar seus dados.</li>
+                    <li>Exportar seus dados financeiros em formato estruturado (JSON).</li>
+                    <li>Solicitar a correção ou exclusão definitiva de sua conta e dados dos nossos servidores.</li>
+                </ul>
+                <p>Para exercer seus direitos, entre em contato pelo e-mail <strong>suporte@saldosimples.com</strong>.</p>
+            </section>
+        </main>
+
+        <footer>
+            <nav>
+                <a href="index.html">Início</a> |
+                <a href="sobre.html">Sobre</a> |
+                <a href="contato.html">Contato</a> |
+                <a href="privacidade.html">Privacidade</a> |
+                <a href="termos.html">Termos de Uso</a>
+            </nav>
+            <p>&copy; 2026 Saldo Simples. Todos os direitos reservados.</p>
+        </footer>
+    </div>
+</body>
+</html>
