@@ -626,6 +626,18 @@
     if(viewAnual) viewAnual.style.display = 'none';
     if(viewAuth) viewAuth.style.display = 'none';
 
+    // Elementos do rodapé que devem sumir na tela de login
+    var saveFlagEl = document.getElementById('saveFlag');
+    var clearBtnEl = document.getElementById('clearBtn');
+    var resetBtnEl = document.getElementById('resetBtn');
+
+    var isAuthView = (view === 'auth');
+
+    // Oculta no login/cadastro, exibe nas outras abas
+    if (saveFlagEl) saveFlagEl.style.display = isAuthView ? 'none' : '';
+    if (clearBtnEl) clearBtnEl.style.display = isAuthView ? 'none' : '';
+    if (resetBtnEl) resetBtnEl.style.display = isAuthView ? 'none' : '';
+
     for(var vi = 0; vi < viewTriggers.length; vi++){ viewTriggers[vi].classList.remove('active'); }
     if(contaTabBtn) contaTabBtn.classList.remove('active');
 
