@@ -901,10 +901,13 @@ button[disabled]{ cursor: not-allowed; opacity: 0.75; }
   background: var(--margin);
 }
 
-/* Esconde a mensagem de dados salvos e os botões de exemplo apenas na view de login/cadastro */
-#viewAuth #saveFlag,
-#viewAuth #clearBtn,
-#viewAuth #resetBtn {
+/* Quando a aba de login/cadastro estiver ativa no HTML, oculta o rodapé de ações */
+[data-view="auth"] #saveFlag,
+[data-view="auth"] #clearBtn,
+[data-view="auth"] #resetBtn,
+body:has(#viewAuth[style*="display: block"]) #saveFlag,
+body:has(#viewAuth[style*="display: block"]) #clearBtn,
+body:has(#viewAuth[style*="display: block"]) #resetBtn {
   display: none !important;
 }
 
