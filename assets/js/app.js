@@ -205,7 +205,7 @@
     }
   }
 
-// --- MODO CLARO / ESCURO (COM ATUALIZAÇÃO DA BARRA MÓVEL) ---
+  // --- MODO CLARO / ESCURO ---
   var THEME_STORAGE_KEY = 'saldo_theme';
 
   function getCurrentTheme(){
@@ -216,7 +216,6 @@
     document.documentElement.setAttribute('data-theme', theme);
     try{ localStorage.setItem(THEME_STORAGE_KEY, theme); }catch(e){}
 
-    // Sincroniza a barra do celular com a cor REAL do fundo (#1a2421 no escuro, #f8fafc no claro)
     var metaThemeColor = document.getElementById('themeColorMeta');
     if (metaThemeColor) {
       metaThemeColor.setAttribute('content', theme === 'dark' ? '#1a2421' : '#f8fafc');
@@ -237,7 +236,6 @@
     });
   }
   
-  // Aplica o tema salvo ou o padrão do atributo já inserido pelo HEAD
   var currentSavedTheme = getCurrentTheme();
   applyTheme(currentSavedTheme);
 
@@ -626,12 +624,15 @@ function showView(view){
     if(viewAnual) viewAnual.style.display = 'none';
     if(viewAuth) viewAuth.style.display = 'none';
 
-    // Seleciona o elemento pai do rodapé (ajuste a tag/classe se necessário)
+    var topBar = document.querySelector('.top-bar');
     var footerEl = document.querySelector('footer') || document.querySelector('.app-footer') || document.querySelector('.footer');
 
-    // Se estiver na tela de login/cadastro (auth), esconde o rodapé inteiro
+    // Esconde o rodapé e o cabeçalho superior na tela de autenticação
     if (footerEl) {
       footerEl.style.display = (view === 'auth') ? 'none' : '';
+    }
+    if (topBar) {
+      topBar.style.display = (view === 'auth') ? 'none' : '';
     }
 
     for(var vi = 0; vi < viewTriggers.length; vi++){ viewTriggers[vi].classList.remove('active'); }
@@ -653,8 +654,11 @@ function showView(view){
       if(viewAuth) viewAuth.style.display = 'block';
       activateTriggers('auth');
       if(contaTabBtn) contaTabBtn.classList.add('active');
-      if(pageTitle) pageTitle.textContent = 'Acessar Conta';
-      if(pageSub) pageSub.textContent = currentUser ? ('Conectado como ' + currentUser.name) : 'Faça login ou cadastre-se para sincronizar seus dados.';
+      
+      var authSub = document.getElementById('authCardSub');
+      if(authSub) {
+        authSub.textContent = currentUser ? ('Conectado como ' + currentUser.name) : 'Faça login ou cadastre-se para sincronizar seus dados.';
+      }
     } else {
       if(viewMensal) viewMensal.style.display = 'block';
       activateTriggers('mensal');
@@ -663,14 +667,18 @@ function showView(view){
       render();
     }
     closeSheet();
+
+    // Rola a página para o topo ao trocar de tela
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+
   for(var vt = 0; vt < viewTriggers.length; vt++){
     (function(btn){
       btn.addEventListener('click', function(){ showView(btn.getAttribute('data-view')); });
     })(viewTriggers[vt]);
   }
 
-  // --- AUTENTICAÇÃO E FORMULÁRIOS CORRIGIDOS ---
+  // --- AUTENTICAÇÃO E FORMULÁRIOS ---
   var tabLogin = document.getElementById('tabLogin');
   var tabRegister = document.getElementById('tabRegister');
   var formLogin = document.getElementById('formLogin');

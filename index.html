@@ -35,17 +35,8 @@
 <body>
   <div class="app-shell">
     <aside class="side-nav" id="sideNav">
-      <p class="nav-eyebrow">Navegar</p>
-      <button class="nav-link view-trigger active" data-view="mensal">
-        <span class="nav-link-title">Mensal</span>
-        <span class="nav-link-sub">despesas e receitas do mês</span>
-      </button>
-      <button class="nav-link view-trigger" data-view="anual">
-        <span class="nav-link-title">Anual</span>
-        <span class="nav-link-sub">soma de gastos por ano</span>
-      </button>
-
-      <p class="nav-eyebrow" style="margin-top:14px;">Conta</p>
+      <!-- CONTA / LOGIN NO TOPO -->
+      <p class="nav-eyebrow">Conta</p>
       <button class="nav-link view-trigger auth-entry-btn" data-view="auth">
         <span class="nav-link-title">Entrar / Cadastrar</span>
         <span class="nav-link-sub">acessar sua conta</span>
@@ -59,6 +50,17 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
         </button>
       </div>
+
+      <!-- VISUALIZAÇÃO E DEMAIS ÍCONES EM BAIXO -->
+      <p class="nav-eyebrow" style="margin-top:14px;">Navegar</p>
+      <button class="nav-link view-trigger active" data-view="mensal">
+        <span class="nav-link-title">Mensal</span>
+        <span class="nav-link-sub">despesas e receitas do mês</span>
+      </button>
+      <button class="nav-link view-trigger" data-view="anual">
+        <span class="nav-link-title">Anual</span>
+        <span class="nav-link-sub">soma de gastos por ano</span>
+      </button>
 
       <p class="nav-eyebrow" style="margin-top:14px;">Dados</p>
       <button class="nav-link action-export">
@@ -76,7 +78,7 @@
         <span class="theme-toggle-track"><span class="theme-toggle-thumb"></span></span>
       </button>
     </aside>
-
+    
     <div class="wrap" id="app">
       <header class="top-bar">
         <div class="top-bar-title">
@@ -85,140 +87,145 @@
         </div>
       </header>
 
+      <div id="viewMensal">
+        <div class="tabs-row" id="tabsRow"></div>
 
-    <div id="viewMensal">
-      <div class="tabs-row" id="tabsRow"></div>
+        <div class="panel">
+          <div class="stat despesas">
+            <p class="stat-label">Despesas</p>
+            <p class="stat-value" id="statDespesas">R$ 0,00</p>
+            <p class="stat-sub" id="statDespesasCount">0 itens</p>
+          </div>
+          <div class="stat receitas">
+            <p class="stat-label">Receitas</p>
+            <p class="stat-value" id="statReceitas">R$ 0,00</p>
+            <p class="stat-sub" id="statReceitasCount">0 itens</p>
+          </div>
+          <div class="stat saldo">
+            <p class="stat-label">Saldo final</p>
+            <p class="stat-value" id="statSaldo">R$ 0,00</p>
+            <p class="stat-sub" id="statSaldoSub">&nbsp;</p>
+          </div>
+        </div>
 
-      <div class="panel">
-        <div class="stat despesas">
-          <p class="stat-label">Despesas</p>
-          <p class="stat-value" id="statDespesas">R$ 0,00</p>
-          <p class="stat-sub" id="statDespesasCount">0 itens</p>
-        </div>
-        <div class="stat receitas">
-          <p class="stat-label">Receitas</p>
-          <p class="stat-value" id="statReceitas">R$ 0,00</p>
-          <p class="stat-sub" id="statReceitasCount">0 itens</p>
-        </div>
-        <div class="stat saldo">
-          <p class="stat-label">Saldo final</p>
-          <p class="stat-value" id="statSaldo">R$ 0,00</p>
-          <p class="stat-sub" id="statSaldoSub">&nbsp;</p>
+        <section class="book expenses">
+          <div class="book-head">
+            <h2 class="book-title">Despesas</h2>
+            <span class="book-total" id="expTotalHead">R$ 0,00</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th class="col-day">Dia</th>
+                <th>Item</th>
+                <th class="col-value">Valor</th>
+                <th class="col-action"></th>
+              </tr>
+            </thead>
+            <tbody id="expensesBody"></tbody>
+          </table>
+          <button class="add-row-btn" id="addExpenseBtn"><span class="plus-sym">+</span> adicionar despesa</button>
+        </section>
+
+        <section class="book income">
+          <div class="book-head">
+            <h2 class="book-title">Receitas</h2>
+            <span class="book-total" id="incTotalHead">R$ 0,00</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th class="col-day">Dia</th>
+                <th>Item</th>
+                <th class="col-value">Valor</th>
+                <th class="col-action"></th>
+              </tr>
+            </thead>
+            <tbody id="incomeBody"></tbody>
+          </table>
+          <button class="add-row-btn" id="addIncomeBtn"><span class="plus-sym">+</span> adicionar receita</button>
+        </section>
+      </div>
+
+      <div id="viewAnual" style="display:none;">
+        <div id="anualYears"></div>
+        <div class="panel geral-panel">
+          <div class="stat despesas">
+            <p class="stat-label">Despesas (geral)</p>
+            <p class="stat-value" id="geralDespesas">R$ 0,00</p>
+            <p class="stat-sub">todos os anos</p>
+          </div>
+          <div class="stat receitas">
+            <p class="stat-label">Receitas (geral)</p>
+            <p class="stat-value" id="geralReceitas">R$ 0,00</p>
+            <p class="stat-sub">todos os anos</p>
+          </div>
+          <div class="stat saldo">
+            <p class="stat-label">Saldo geral</p>
+            <p class="stat-value" id="geralSaldo">R$ 0,00</p>
+            <p class="stat-sub" id="geralSaldoSub">&nbsp;</p>
+          </div>
         </div>
       </div>
 
-      <section class="book expenses">
-        <div class="book-head">
-          <h2 class="book-title">Despesas</h2>
-          <span class="book-total" id="expTotalHead">R$ 0,00</span>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th class="col-day">Dia</th>
-              <th>Item</th>
-              <th class="col-value">Valor</th>
-              <th class="col-action"></th>
-            </tr>
-          </thead>
-          <tbody id="expensesBody"></tbody>
-        </table>
-        <button class="add-row-btn" id="addExpenseBtn"><span class="plus-sym">+</span> adicionar despesa</button>
-      </section>
-
-      <section class="book income">
-        <div class="book-head">
-          <h2 class="book-title">Receitas</h2>
-          <span class="book-total" id="incTotalHead">R$ 0,00</span>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th class="col-day">Dia</th>
-              <th>Item</th>
-              <th class="col-value">Valor</th>
-              <th class="col-action"></th>
-            </tr>
-          </thead>
-          <tbody id="incomeBody"></tbody>
-        </table>
-        <button class="add-row-btn" id="addIncomeBtn"><span class="plus-sym">+</span> adicionar receita</button>
-      </section>
+      <div id="viewAuth" style="display:none;">
+  <div class="auth-card">
+    <!-- TÍTULO E SUBTÍTULO DENTRO DO CARD BRANCO -->
+    <div class="auth-card-header">
+      <h2 class="auth-card-title">Acessar Conta</h2>
+      <p class="auth-card-sub" id="authCardSub">Faça login ou cadastre-se para sincronizar seus dados.</p>
     </div>
 
-    <div id="viewAnual" style="display:none;">
-      <div id="anualYears"></div>
-      <div class="panel geral-panel">
-        <div class="stat despesas">
-          <p class="stat-label">Despesas (geral)</p>
-          <p class="stat-value" id="geralDespesas">R$ 0,00</p>
-          <p class="stat-sub">todos os anos</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin">Entrar</button>
+      <button class="auth-tab" id="tabRegister">Cadastrar</button>
+    </div>
+
+    <form id="formLogin" class="auth-form">
+      <div class="form-group">
+        <label for="loginEmail">E-mail</label>
+        <input type="email" id="loginEmail" required placeholder="seu@email.com">
+      </div>
+      <div class="form-group">
+        <label for="loginPassword">Senha</label>
+        <input type="password" id="loginPassword" required placeholder="••••••••">
+      </div>
+      <button type="submit" class="auth-submit" id="loginSubmitBtn">
+        <span class="btn-spinner" hidden></span><span class="btn-label">Entrar</span>
+      </button>
+    </form>
+
+    <form id="formRegister" class="auth-form" style="display:none;">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="regFirstName">Nome</label>
+          <input type="text" id="regFirstName" required placeholder="Seu nome">
         </div>
-        <div class="stat receitas">
-          <p class="stat-label">Receitas (geral)</p>
-          <p class="stat-value" id="geralReceitas">R$ 0,00</p>
-          <p class="stat-sub">todos os anos</p>
-        </div>
-        <div class="stat saldo">
-          <p class="stat-label">Saldo geral</p>
-          <p class="stat-value" id="geralSaldo">R$ 0,00</p>
-          <p class="stat-sub" id="geralSaldoSub">&nbsp;</p>
+        <div class="form-group">
+          <label for="regLastName">Sobrenome</label>
+          <input type="text" id="regLastName" required placeholder="Seu sobrenome">
         </div>
       </div>
-    </div>
-
-    <div id="viewAuth" style="display:none;">
-      <div class="auth-card">
-        <div class="auth-tabs">
-          <button class="auth-tab active" id="tabLogin">Entrar</button>
-          <button class="auth-tab" id="tabRegister">Cadastrar</button>
-        </div>
-
-        <form id="formLogin" class="auth-form">
-          <div class="form-group">
-            <label for="loginEmail">E-mail</label>
-            <input type="email" id="loginEmail" required placeholder="seu@email.com">
-          </div>
-          <div class="form-group">
-            <label for="loginPassword">Senha</label>
-            <input type="password" id="loginPassword" required placeholder="••••••••">
-          </div>
-          <button type="submit" class="auth-submit" id="loginSubmitBtn">
-            <span class="btn-spinner" hidden></span><span class="btn-label">Entrar</span>
-          </button>
-        </form>
-
-        <form id="formRegister" class="auth-form" style="display:none;">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="regFirstName">Nome</label>
-              <input type="text" id="regFirstName" required placeholder="Seu nome">
-            </div>
-            <div class="form-group">
-              <label for="regLastName">Sobrenome</label>
-              <input type="text" id="regLastName" required placeholder="Seu sobrenome">
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="regEmail">E-mail</label>
-            <input type="email" id="regEmail" required placeholder="seu@email.com">
-          </div>
-          <div class="form-group">
-            <label for="regPassword">Senha</label>
-            <input type="password" id="regPassword" required placeholder="••••••••">
-          </div>
-          <button type="submit" class="auth-submit" id="registerSubmitBtn">
-            <span class="btn-spinner" hidden></span><span class="btn-label">Criar conta</span>
-          </button>
-        </form>
+      <div class="form-group">
+        <label for="regEmail">E-mail</label>
+        <input type="email" id="regEmail" required placeholder="seu@email.com">
       </div>
-    </div>
+      <div class="form-group">
+        <label for="regPassword">Senha</label>
+        <input type="password" id="regPassword" required placeholder="••••••••">
+      </div>
+      <button type="submit" class="auth-submit" id="registerSubmitBtn">
+        <span class="btn-spinner" hidden></span><span class="btn-label">Criar conta</span>
+      </button>
+    </form>
+  </div>
+</div>
 
-    <footer>
-      dados salvos automaticamente &middot; 
-      <button id="clearBtn">limpar exemplo</button> &middot; 
-      <button id="resetBtn">carregar exemplo</button>
-    </footer>
+      <footer>
+        dados salvos automaticamente &middot; 
+        <button id="clearBtn">limpar exemplo</button> &middot; 
+        <button id="resetBtn">carregar exemplo</button>
+      </footer>
     </div>
   </div>
 
@@ -277,7 +284,7 @@
 
   <div class="save-flag" id="saveFlag">salvo</div>
 
-  <!-- Modal customizado (substitui confirm()/alert() nativos) -->
+  <!-- Modal customizado -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal-card" role="dialog" aria-modal="true">
       <h3 class="modal-title" id="modalTitle"></h3>

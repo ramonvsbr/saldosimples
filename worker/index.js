@@ -173,7 +173,7 @@ async function verifyPassword(password, storedHash) {
   return hashHex === originalHash;
 }
 
-// --- JWT ASSINADO (HMAC-SHA256) - VERSÃO CORRIGIDA PARA CLOUDFLARE WORKERS ---
+// --- JWT ASSINADO (HMAC-SHA256) ---
 
 async function getSigningKey(secret) {
   const encoder = new TextEncoder();
@@ -216,9 +216,12 @@ async function generateToken(userId, secret) {
   return `${payloadB64}.${signatureB64}`;
 }
 
-async function verifyToken(token, secret) {
-  if (!token) return null;
+async function verifyToken(tokenHeader, secret) {
+  if (!tokenHeader) return null;
   try {
+    // Tratamento flexível: remove o prefixo 'Bearer ' caso exista
+    const token = tokenHeader.replace(/^Bearer\s+/i, '').trim();
+
     const parts = token.split('.');
     if (parts.length !== 2) return null;
 
