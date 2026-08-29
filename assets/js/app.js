@@ -202,6 +202,23 @@
     });
   }
 
+  // --- BOTÕES COM CARREGAMENTO ---
+  function setBtnLoading(btn, loading, loadingLabel){
+    if(!btn) return;
+    var spinner = btn.querySelector('.btn-spinner');
+    var label = btn.querySelector('.btn-label');
+    btn.disabled = loading;
+    if(spinner) spinner.hidden = !loading;
+    if(label){
+      if(loading){
+        if(label.dataset.originalText === undefined) label.dataset.originalText = label.textContent;
+        if(loadingLabel) label.textContent = loadingLabel;
+      } else if(label.dataset.originalText !== undefined){
+        label.textContent = label.dataset.originalText;
+      }
+    }
+  }
+
   // --- MODO CLARO / ESCURO ---
   var THEME_STORAGE_KEY = 'saldo_theme';
 
