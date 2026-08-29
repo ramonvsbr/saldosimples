@@ -621,22 +621,18 @@
   var pageTitle = document.getElementById('pageTitle');
   var pageSub = document.getElementById('pageSub');
 
-  function showView(view){
+function showView(view){
     if(viewMensal) viewMensal.style.display = 'none';
     if(viewAnual) viewAnual.style.display = 'none';
     if(viewAuth) viewAuth.style.display = 'none';
 
-    // Elementos do rodapé que devem sumir na tela de login
-    var saveFlagEl = document.getElementById('saveFlag');
-    var clearBtnEl = document.getElementById('clearBtn');
-    var resetBtnEl = document.getElementById('resetBtn');
+    // Seleciona o elemento pai do rodapé (ajuste a tag/classe se necessário)
+    var footerEl = document.querySelector('footer') || document.querySelector('.app-footer') || document.querySelector('.footer');
 
-    var isAuthView = (view === 'auth');
-
-    // Oculta no login/cadastro, exibe nas outras abas
-    if (saveFlagEl) saveFlagEl.style.display = isAuthView ? 'none' : '';
-    if (clearBtnEl) clearBtnEl.style.display = isAuthView ? 'none' : '';
-    if (resetBtnEl) resetBtnEl.style.display = isAuthView ? 'none' : '';
+    // Se estiver na tela de login/cadastro (auth), esconde o rodapé inteiro
+    if (footerEl) {
+      footerEl.style.display = (view === 'auth') ? 'none' : '';
+    }
 
     for(var vi = 0; vi < viewTriggers.length; vi++){ viewTriggers[vi].classList.remove('active'); }
     if(contaTabBtn) contaTabBtn.classList.remove('active');
