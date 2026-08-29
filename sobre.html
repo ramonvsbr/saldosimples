@@ -10,7 +10,7 @@
   <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" id="themeColorMeta" content="#f8fafc">
+  <meta name="theme-color" id="themeColorMeta" content="#1a2421">
   <link rel="stylesheet" href="assets/css/style.css">
   
   <script>
@@ -28,229 +28,165 @@
   </script>
 
   <style>
-    /* Reset & Inherit Fonts from CSS Variables/System */
-    body {
-      font-family: var(--font-sans, 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
-      margin: 0;
-      padding: 0;
+    body{
       display: flex;
       justify-content: center;
-      align-items: center;
       min-height: 100vh;
-      background-color: var(--bg-body, #0f172a);
-      color: var(--text-main, #f8fafc);
     }
 
-    .app-container {
+    .app-container{
       width: 100%;
-      max-width: 680px;
+      max-width: 640px;
       margin: 0 auto;
-      padding: 2rem 1.5rem;
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
-      box-sizing: border-box;
     }
 
-    .app-header {
+    .app-header{
       width: 100%;
-      margin-bottom: 2rem;
+      margin-bottom: 22px;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
 
-    .page-title {
-      font-family: var(--font-serif, 'Fraunces', Georgia, serif);
-      font-size: 2.25rem;
+    .page-title{
+      font-family: 'Inter', sans-serif;
       font-weight: 700;
-      margin: 0.5rem 0 0 0;
-      color: var(--text-heading, #ffffff);
+      font-size: 34px;
+      letter-spacing: -0.015em;
+      margin: 4px 0 0;
+      color: var(--ink);
     }
 
-    .content-body {
+    .content-body{
       width: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 1.5rem;
+      gap: 18px;
     }
 
-    .card {
+    .card{
       width: 100%;
-      background: var(--bg-card, #1e293b);
-      border: 1px solid var(--border-color, #334155);
-      border-radius: 16px;
-      padding: 1.75rem 1.5rem;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+      background: var(--sheet);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      border-left: 3px solid var(--margin-soft);
+      padding: 22px;
       box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
+      text-align: left;
     }
 
-    .card h2 {
-      font-family: var(--font-serif, 'Fraunces', Georgia, serif);
-      font-size: 1.35rem;
-      margin-top: 0;
-      margin-bottom: 1rem;
-      color: var(--text-heading, #ffffff);
+    .card h2{
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 19px;
+      letter-spacing: -0.01em;
+      margin: 0 0 12px;
+      color: var(--ink);
     }
 
-    .card p {
-      font-size: 0.975rem;
+    .card p{
+      font-size: 14px;
       line-height: 1.6;
-      color: var(--text-muted, #cbd5e1);
-      margin: 0 0 0.75rem 0;
+      color: var(--ink-soft);
+      margin: 0 0 10px;
     }
+    .card p:last-child{ margin-bottom: 0; }
 
-    .info-list {
+    .info-list{
       list-style: none;
       padding: 0;
       margin: 0;
-      text-align: center;
-      width: 100%;
     }
-
-    .info-list li {
-      margin-bottom: 1rem;
-      font-size: 0.95rem;
+    .info-list li{
+      font-size: 14px;
       line-height: 1.6;
-      color: var(--text-muted, #cbd5e1);
+      color: var(--ink-soft);
+      margin-bottom: 14px;
     }
+    .info-list li:last-child{ margin-bottom: 0; }
+    .info-list li strong{ color: var(--ink); }
 
-    .info-list li:last-child {
-      margin-bottom: 0;
-    }
-
-    code {
-      font-family: var(--font-mono, 'IBM Plex Mono', monospace);
-      background: rgba(255, 255, 255, 0.08);
-      padding: 0.2rem 0.4rem;
+    code{
+      font-family: 'IBM Plex Mono', monospace;
+      background: rgba(var(--tint-rgb),0.06);
+      padding: 2px 6px;
       border-radius: 4px;
-      font-size: 0.875rem;
+      font-size: 13px;
+      color: var(--ink);
     }
 
-    /* Form styling for Contato */
-    .app-form {
-      width: 100%;
-      max-width: 480px;
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
-      align-items: center;
-    }
-
-    .form-group {
+    /* Formulário (Contato) */
+    .app-form{
       width: 100%;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      text-align: center;
+      gap: 16px;
     }
-
-    .form-group label {
-      font-size: 0.875rem;
-      font-weight: 600;
-      margin-bottom: 0.4rem;
-      color: var(--text-main, #f8fafc);
+    .form-group{
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      text-align: left;
     }
-
-    .form-input {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-      border: 1px solid var(--border-color, #334155);
-      background: var(--bg-input, #0f172a);
-      color: var(--text-main, #ffffff);
+    .form-group label{
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ink-soft);
+      font-family: 'Inter', sans-serif;
+    }
+    .form-input{
+      padding: 10px 12px;
+      border: 1px solid var(--rule-strong);
+      border-radius: 6px;
+      background: var(--paper);
+      color: var(--ink);
       font-family: inherit;
-      font-size: 0.95rem;
+      font-size: 14px;
+      outline: none;
       box-sizing: border-box;
-      text-align: center;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
-
-    textarea.form-input {
-      min-height: 120px;
-      resize: vertical;
+    .form-input:focus{
+      border-color: var(--margin);
+      box-shadow: 0 0 0 2px var(--margin-soft);
     }
+    textarea.form-input{ min-height: 120px; resize: vertical; }
 
-    .btn-primary {
-      width: 100%;
-      padding: 0.85rem;
-      border-radius: 8px;
+    .btn-primary{
+      margin-top: 4px;
+      padding: 12px;
+      border-radius: 6px;
       border: none;
-      background: #0284c7;
-      color: #ffffff;
+      background: var(--ink);
+      color: var(--paper);
+      font-family: 'Inter', sans-serif;
       font-weight: 600;
-      font-size: 1rem;
+      font-size: 14px;
       cursor: pointer;
-      transition: background 0.2s ease;
+      transition: background 0.15s ease;
     }
+    .btn-primary:hover{ background: var(--margin); }
 
-    .btn-primary:hover {
-      background: #0369a1;
-    }
-
-    /* Global link reset & Back link */
-    a, a:visited {
-      color: inherit;
+    /* Link de volta */
+    .back-link, .back-link:visited{
+      color: var(--margin);
       text-decoration: none;
-    }
-
-    .back-link, 
-    .back-link:visited,
-    .back-link:hover,
-    .back-link:active {
-      color: #38bdf8 !important;
-      text-decoration: none !important;
-      font-size: 0.95rem;
+      font-size: 14px;
       font-weight: 500;
       display: inline-block;
-      margin-bottom: 0.5rem;
+      margin-bottom: 10px;
+      transition: opacity 0.15s ease;
     }
+    .back-link:hover{ text-decoration: underline; opacity: 0.85; }
 
-    .back-link:hover {
-      text-decoration: underline !important;
-      color: #7dd3fc !important;
-    }
-
-    /* Footer styling */
-    .app-footer {
-      margin-top: 3rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
-      width: 100%;
-      text-align: center;
-    }
-
-    .app-footer nav.footer-nav {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-bottom: 0.75rem;
-      font-size: 0.9rem;
-    }
-
-    .app-footer nav.footer-nav a,
-    .app-footer nav.footer-nav a:visited {
-      color: #94a3b8 !important;
-      text-decoration: none !important;
-      transition: color 0.2s ease;
-    }
-
-    .app-footer nav.footer-nav a:hover,
-    .app-footer nav.footer-nav a:active {
-      color: #f1f5f9 !important;
-      text-decoration: underline !important;
-    }
-
-    .app-footer p {
-      font-size: 0.8rem;
-      color: #64748b;
-      margin: 0;
+    @media (max-width: 560px){
+      .page-title{ font-size: 26px; }
+      .card{ padding: 18px; }
     }
   </style>
 
