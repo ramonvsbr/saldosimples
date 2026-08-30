@@ -1,5 +1,6 @@
 # Cloudflare / Wrangler
 .wrangler/
+.wrangler/cache
 .dev.vars
 
 # Logs e arquivos do sistema
