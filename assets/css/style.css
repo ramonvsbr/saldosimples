@@ -1044,3 +1044,35 @@ footer button:hover{ color: var(--margin); }
 .form-group-checkbox label a:hover {
   color: var(--margin);
 }
+
+/* --- Parcelas / Vezes --- */
+.item-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.inst-input {
+  width: 44px !important;
+  padding: 6px 2px !important;
+  text-align: center;
+  font-size: 12.5px;
+  -moz-appearance: textfield;
+}
+.inst-input::-webkit-inner-spin-button,
+.inst-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.inst-badge {
+  font-size: 11px;
+  color: var(--ink-faint);
+  white-space: nowrap;
+  min-width: 40px;
+}
+.inst-badge.active {
+  color: var(--margin);
+  font-weight: 600;
+}
+section.book.income .inst-badge.active {
+  color: var(--gold); /* Cor da receita */
+}

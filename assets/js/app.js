@@ -108,6 +108,21 @@
     return y + "-" + (m < 10 ? "0"+m : ""+m);
   }
 
+  function getMonthDiff(startKey, endKey) {
+    if(!startKey || !endKey) return 0;
+    var s = startKey.split('-');
+    var e = endKey.split('-');
+    return (parseInt(e[0],10) - parseInt(s[0],10)) * 12 + (parseInt(e[1],10) - parseInt(s[1],10));
+  }
+
+  function addMonthsToKey(key, num) {
+    var parts = key.split('-');
+    var y = parseInt(parts[0],10);
+    var m = parseInt(parts[1],10) + num;
+    while(m > 12) { m -= 12; y++; }
+    return y + "-" + (m < 10 ? "0"+m : ""+m);
+  }
+
   function fmtMoney(v){
     return (v||0).toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
   }
@@ -256,18 +271,11 @@
   // --- INTEGRAÇÃO COM A NUVEM ---
   var lastCloudErrorToastAt = 0;
 
-  // "Pendência de sincronização": true sempre que o estado local mudou e ainda
-  // não temos confirmação de que a nuvem tem essa versão. Fica em uma chave
-  // própria do localStorage (não dentro de `state`, que é o JSON enviado ao
-  // backend) para sobreviver a reloads e ser checada antes de puxar dados da
-  // nuvem por cima de alterações locais ainda não enviadas.
   var PENDING_SYNC_KEY = 'saldo_pending_sync';
   function markPendingSync(){ try{ localStorage.setItem(PENDING_SYNC_KEY, '1'); }catch(e){} }
   function clearPendingSync(){ try{ localStorage.removeItem(PENDING_SYNC_KEY); }catch(e){} }
   function hasPendingSync(){ try{ return localStorage.getItem(PENDING_SYNC_KEY) === '1'; }catch(e){ return false; } }
 
-  // Único lugar que grava/limpa os 3 itens de sessão no localStorage, para não
-  // repetir (e arriscar esquecer) esse trio em login, cadastro, logout e expiração.
   function setSession(user){
     currentUser = user;
     try{
@@ -319,9 +327,6 @@
     });
   }
 
-  // Busca os dados da conta na nuvem. Se este dispositivo tiver alterações
-  // locais ainda não enviadas (hasPendingSync), pergunta ao usuário antes de
-  // sobrescrever qualquer coisa, em vez de simplesmente descartá-las.
   function loadFromCloud() {
     if (!currentUser || !currentUser.token) {
       return Promise.resolve(false);
@@ -388,7 +393,15 @@
   function sumMonth(list, monthKey){
     var total = 0, count = 0;
     for(var i=0;i<list.length;i++){
-      var v = list[i].values[monthKey];
+      var row = list[i];
+      var instTotal = row.instTotal || 1;
+      var instStart = row.instStart || monthKey;
+      var diff = getMonthDiff(instStart, monthKey);
+      
+      // Ignora se for uma parcela de outro período (futuro ou concluído)
+      if (instTotal > 1 && (diff < 0 || diff >= instTotal)) continue;
+      
+      var v = row.values[monthKey];
       if(typeof v === 'number' && !isNaN(v)){ total += v; count++; }
     }
     return { total: total, count: count };
@@ -561,18 +574,90 @@
       });
       tdDay.appendChild(dayInput);
 
+// --- COLUNA DO ITEM E DA PARCELA ---
       var tdItem = document.createElement('td');
+      var itemWrapper = document.createElement('div');
+      itemWrapper.className = 'item-wrapper';
+      itemWrapper.style.display = 'flex';
+      itemWrapper.style.alignItems = 'center';
+      itemWrapper.style.gap = '4px'; // Reduzido de 8px para 4px
+
       var itemInput = document.createElement('input');
       itemInput.type = 'text';
       itemInput.className = 'cell-input item-input';
       itemInput.placeholder = 'nome do item';
       itemInput.value = row.item || '';
+      itemInput.style.flex = '1';
+      itemInput.style.minWidth = '70px'; // Garante que o input de texto não seja esmagado
       itemInput.addEventListener('change', function(){
         row.item = itemInput.value;
         persist();
       });
-      tdItem.appendChild(itemInput);
 
+      var instTotal = row.instTotal || 1;
+      var instStart = row.instStart || state.selectedMonth;
+      var currentDiff = getMonthDiff(instStart, state.selectedMonth);
+
+      var instInput = document.createElement('input');
+      instInput.type = 'number';
+      instInput.min = 1;
+      instInput.className = 'cell-input inst-input';
+      instInput.placeholder = '1';
+      instInput.title = 'Número de parcelas/meses';
+      instInput.value = instTotal > 1 ? instTotal : '';
+      instInput.style.width = '34px'; // Reduzido de 40px para 34px
+      instInput.style.textAlign = 'center';
+      instInput.style.padding = '4px 2px'; // Diminui o espaço interno do input numérico
+
+      var instBadge = document.createElement('span');
+      instBadge.className = 'inst-badge';
+      instBadge.style.fontSize = '12px';
+      instBadge.style.whiteSpace = 'nowrap';
+      
+      if (instTotal > 1) {
+        if (currentDiff < 0) {
+          instBadge.textContent = 'Futuro';
+          instBadge.style.color = '#888';
+        } else if (currentDiff >= instTotal) {
+          instBadge.textContent = 'Fim'; // Trocado de 'Concluído' para 'Fim' para poupar espaço
+          instBadge.style.color = '#10b981';
+        } else {
+          instBadge.textContent = (currentDiff + 1) + '/' + instTotal;
+          instBadge.style.fontWeight = 'bold';
+        }
+      } else {
+        instBadge.textContent = 'x'; // Trocado de 'vezes' para 'x'
+        instBadge.style.color = '#888';
+      }
+
+      instInput.addEventListener('change', function(){
+        var t = parseInt(instInput.value, 10);
+        if(isNaN(t) || t < 1) t = 1;
+        row.instTotal = t;
+        if (!row.instStart || t === 1) row.instStart = state.selectedMonth;
+
+        if (t > 1) {
+          var baseVal = row.values[row.instStart] !== undefined ? row.values[row.instStart] : row.values[state.selectedMonth];
+          if (baseVal !== undefined) {
+            for (var i = 0; i < t; i++) {
+              var mk = addMonthsToKey(row.instStart, i);
+              row.values[mk] = baseVal;
+              if (state.months.indexOf(mk) === -1) state.months.push(mk);
+            }
+            state.months.sort();
+            renderTabs();
+          }
+        }
+        persist();
+        renderTable(kind);
+      });
+
+      itemWrapper.appendChild(itemInput);
+      itemWrapper.appendChild(instInput);
+      itemWrapper.appendChild(instBadge);
+      tdItem.appendChild(itemWrapper);
+
+      // --- COLUNA DO VALOR ---
       var tdVal = document.createElement('td');
       var valInput = document.createElement('input');
       valInput.type = 'number';
@@ -581,12 +666,28 @@
       valInput.placeholder = 'R$ —';
       var curVal = row.values[state.selectedMonth];
       valInput.value = (typeof curVal === 'number' && !isNaN(curVal)) ? curVal : '';
+      
       valInput.addEventListener('change', function(){
         var v = parseFloat(valInput.value);
+        var t = row.instTotal || 1;
+        var start = row.instStart || state.selectedMonth;
+
         if(isNaN(v) || valInput.value === ''){
           delete row.values[state.selectedMonth];
+          if (t > 1) {
+            for (var i = 0; i < t; i++) { delete row.values[addMonthsToKey(start, i)]; }
+          }
         } else {
           row.values[state.selectedMonth] = v;
+          if (t > 1) {
+            for (var i = 0; i < t; i++) {
+              var mk = addMonthsToKey(start, i);
+              row.values[mk] = v;
+              if (state.months.indexOf(mk) === -1) state.months.push(mk);
+            }
+            state.months.sort();
+            renderTabs();
+          }
         }
         persist();
         renderPanel();
@@ -620,7 +721,8 @@
   function addRow(kind){
     var list = kind === 'expenses' ? state.expenses : state.income;
     var id = (kind === 'expenses' ? 'e' : 'r') + (state.nextId++);
-    list.push({ id:id, day:null, item:'', values:{} });
+    // Adicionado instTotal (total de vezes) e instStart (mês da primeira parcela)
+    list.push({ id:id, day:null, item:'', values:{}, instTotal: 1, instStart: state.selectedMonth });
     persist();
     render();
     setTimeout(function(){
@@ -701,7 +803,6 @@ function showView(view){
     var topBar = document.querySelector('.top-bar');
     var footerEl = document.querySelector('footer') || document.querySelector('.app-footer') || document.querySelector('.footer');
 
-    // Esconde o rodapé e o cabeçalho superior na tela de autenticação
     if (footerEl) {
       footerEl.style.display = (view === 'auth') ? 'none' : '';
     }
@@ -742,7 +843,6 @@ function showView(view){
     }
     closeSheet();
 
-    // Rola a página para o topo ao trocar de tela
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -776,9 +876,6 @@ function showView(view){
     });
   }
 
-  // Faz um POST de autenticação (login/cadastro) e devolve o JSON já parseado.
-  // Em caso de resposta não-JSON, rejeita com um erro marcado por `code`
-  // (em vez de comparar texto de mensagem, que quebraria se a mensagem mudasse).
   function authRequest(url, payload){
     return fetch(url, {
       method: 'POST',
@@ -835,7 +932,6 @@ function showView(view){
     formRegister.addEventListener('submit', function(e){
       e.preventDefault();
 
-      // Validação da checkbox dos Termos
       var regTerms = document.getElementById('regTerms');
       if (regTerms && !regTerms.checked) {
         showToast('Você precisa aceitar os Termos e a Política para criar a conta.', 'error');
