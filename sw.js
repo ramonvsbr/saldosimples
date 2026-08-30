@@ -5,7 +5,7 @@
 // Subimos pra v3 aqui porque a lógica de fetch mudou: sem isso, celulares
 // que já tenham o SW v2 ativo continuariam rodando a versão com bug até
 // o navegador decidir checar por uma atualização por conta própria.
-const CACHE_NAME = 'saldosimples-v4';
+const CACHE_NAME = 'saldosimples-v5';
 
 // Só usamos '/' (nunca '/index.html') porque a Cloudflare, por padrão,
 // redireciona /index.html -> / (html_handling: "auto-trailing-slash" no
