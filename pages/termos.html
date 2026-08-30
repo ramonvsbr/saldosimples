@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Contato e Suporte | Saldo Simples</title>
+  <title>Termos de Uso | Saldo Simples</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="manifest" href="/manifest.json">
@@ -196,57 +196,39 @@
     <header class="app-header">
       <div class="header-content">
         <a href="index.html" class="back-link">&larr; Voltar ao App</a>
-        <h1 class="page-title">Contato e Suporte</h1>
+        <h1 class="page-title">Termos de Uso</h1>
       </div>
     </header>
 
     <main class="content-body">
       <section class="card">
-        <h2>Canais de Atendimento</h2>
-        <p>Precisa de suporte técnico, quer relatar uma falha ou exercer seus direitos de privacidade (LGPD)? Fale conosco via e-mail ou pelo formulário abaixo.</p>
-        <p><strong>E-mail Direto:</strong> <code>suporte@saldosimples.com</code></p>
+        <h2>1. Aceitação</h2>
+        <p>Ao utilizar o aplicativo <strong>Saldo Simples</strong>, você concorda com estes Termos de Uso. Caso discorde de algum item, interrompa o uso do serviço.</p>
       </section>
 
       <section class="card">
-        <h2>Envie sua Mensagem</h2>
-        <form class="app-form" action="#" method="POST" onsubmit="event.preventDefault(); alert('Mensagem enviada com sucesso!');">
-          <div class="form-group">
-            <label for="nome">Nome Completo</label>
-            <input type="text" id="nome" name="nome" class="form-input" required placeholder="Seu nome">
-          </div>
+        <h2>2. Isenção de Responsabilidade</h2>
+        <p>O Saldo Simples é uma ferramenta de apoio para organização financeira pessoal. <strong>O aplicativo não substitui assessoria contábil ou financeira profissional.</strong> O usuário é o único responsável por suas decisões financeiras e lançamentos de dados.</p>
+      </section>
 
-          <div class="form-group">
-            <label for="email">E-mail de Contato</label>
-            <input type="email" id="email" name="email" class="form-input" required placeholder="seu@email.com">
-          </div>
+      <section class="card">
+        <h2>3. Uso Adequado</h2>
+        <p>É proibido utilizar a aplicação para práticas ilícitas, ataques cibernéticos ou sobrecarga intencional dos servidores. O descumprimento pode acarretar o encerramento imediato do acesso.</p>
+      </section>
 
-          <div class="form-group">
-            <label for="assunto">Assunto</label>
-            <select id="assunto" name="assunto" class="form-input">
-              <option value="duvida">Dúvida Geral</option>
-              <option value="suporte">Suporte Técnico / Relatório de Bug</option>
-              <option value="lgpd">Privacidade / LGPD</option>
-              <option value="sugestao">Sugestão de Melhoria</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="mensagem">Mensagem</label>
-            <textarea id="mensagem" name="mensagem" class="form-input" required placeholder="Como podemos ajudar?"></textarea>
-          </div>
-
-          <button type="submit" class="btn btn-primary">Enviar Mensagem</button>
-        </form>
+      <section class="card">
+        <h2>4. Disponibilidade</h2>
+        <p>O serviço é disponibilizado "como está" (<em>as-is</em>). Embora busquemos 100% de disponibilidade, instabilidades pontuais podem ocorrer na infraestrutura em nuvem.</p>
       </section>
     </main>
 
     <footer class="app-footer">
       <nav class="footer-nav">
-        <a href="index.html">Início</a> &bull;
-        <a href="sobre.html">Sobre</a> &bull;
-        <a href="contato.html">Contato</a> &bull;
-        <a href="privacidade.html">Privacidade</a> &bull;
-        <a href="termos.html">Termos de Uso</a>
+        <a href="/index.html">Início</a> &bull;
+        <a href="/pages/sobre.html">Sobre</a> &bull;
+        <a href="/pages/contato.html">Contato</a> &bull;
+        <a href="/pages/privacidade.html">Privacidade</a> &bull;
+        <a href="/pages/termos.html">Termos de Uso</a>
       </nav>
       <p>&copy; 2026 Saldo Simples. Todos os direitos reservados.</p>
     </footer>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sobre | Saldo Simples</title>
+  <title>Política de Privacidade | Saldo Simples</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="manifest" href="/manifest.json">
@@ -196,38 +196,43 @@
     <header class="app-header">
       <div class="header-content">
         <a href="index.html" class="back-link">&larr; Voltar ao App</a>
-        <h1 class="page-title">Sobre o Saldo Simples</h1>
+        <h1 class="page-title">Política de Privacidade</h1>
       </div>
     </header>
 
     <main class="content-body">
       <section class="card">
-        <h2>Nossa Missão</h2>
-        <p>O <strong>Saldo Simples</strong> foi idealizado para ser uma solução minimalista, leve e objetiva para a gestão financeira pessoal. Acreditamos que acompanhar receitas e despesas não precisa ser uma tarefa complexa nem depender de planilhas pesadas ou aplicativos cheios de anúncios invasivos.</p>
+        <h2>1. Introdução</h2>
+        <p>O <strong>Saldo Simples</strong> está comprometido com a proteção da sua privacidade. Esta política detalha como tratamos suas informações em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).</p>
       </section>
 
       <section class="card">
-        <h2>Diferenciais Tecnológicos</h2>
+        <h2>2. Dados Coletados</h2>
         <ul class="info-list">
-          <li><strong>Funcionamento Offline (PWA):</strong> Acesse e registre suas finanças a qualquer momento, mesmo sem conexão à internet. Suas alterações são sincronizadas assim que você reconectar.</li>
-          <li><strong>Arquitetura Edge/Serverless:</strong> Utiliza o Cloudflare Workers e o banco de dados Cloudflare D1 para oferecer máxima velocidade e disponibilidade global.</li>
-          <li><strong>Privacidade em Primeiro Lugar:</strong> Suas credenciais são protegidas por algoritmos de criptografia e seus dados permanecem estritamente isolados.</li>
+          <li><strong>Dados da Conta:</strong> Endereço de e-mail e credenciais de acesso (armazenadas em formato hash seguro).</li>
+          <li><strong>Registros Financeiros:</strong> Lançamentos de receitas e despesas cadastrados por você no aplicativo.</li>
+          <li><strong>Logs Técnicos:</strong> Registros básicos de acesso (IP e user-agent) para proteção contra acessos indevidos e controle de taxa de requisições.</li>
         </ul>
       </section>
 
       <section class="card">
-        <h2>Transparência</h2>
-        <p>Priorizamos a segurança e a visibilidade sobre como suas informações são tratadas. O projeto busca adotar boas práticas de desenvolvimento web e padrões abertos de software.</p>
+        <h2>3. Armazenamento e PWA</h2>
+        <p>Para garantir o uso sem internet, os dados são mantidos localmente no seu dispositivo através de <code>localStorage</code> e <code>Cache API</code>. Quando online, o aplicativo sincroniza os dados de forma segura com nossa infraestrutura Cloudflare D1.</p>
+      </section>
+
+      <section class="card">
+        <h2>4. Direitos do Usuário (LGPD)</h2>
+        <p>Você pode a qualquer momento solicitar a confirmação, exportação (backup JSON) ou exclusão permanente dos seus dados pelo e-mail <code>suporte@saldosimples.com</code>.</p>
       </section>
     </main>
 
     <footer class="app-footer">
       <nav class="footer-nav">
-        <a href="index.html">Início</a> &bull;
-        <a href="sobre.html">Sobre</a> &bull;
-        <a href="contato.html">Contato</a> &bull;
-        <a href="privacidade.html">Privacidade</a> &bull;
-        <a href="termos.html">Termos de Uso</a>
+        <a href="/index.html">Início</a> &bull;
+        <a href="/pages/sobre.html">Sobre</a> &bull;
+        <a href="/pages/contato.html">Contato</a> &bull;
+        <a href="/pages/privacidade.html">Privacidade</a> &bull;
+        <a href="/pages/termos.html">Termos de Uso</a>
       </nav>
       <p>&copy; 2026 Saldo Simples. Todos os direitos reservados.</p>
     </footer>

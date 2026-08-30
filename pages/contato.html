@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Política de Privacidade | Saldo Simples</title>
+  <title>Contato e Suporte | Saldo Simples</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="manifest" href="/manifest.json">
@@ -196,43 +196,57 @@
     <header class="app-header">
       <div class="header-content">
         <a href="index.html" class="back-link">&larr; Voltar ao App</a>
-        <h1 class="page-title">Política de Privacidade</h1>
+        <h1 class="page-title">Contato e Suporte</h1>
       </div>
     </header>
 
     <main class="content-body">
       <section class="card">
-        <h2>1. Introdução</h2>
-        <p>O <strong>Saldo Simples</strong> está comprometido com a proteção da sua privacidade. Esta política detalha como tratamos suas informações em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).</p>
+        <h2>Canais de Atendimento</h2>
+        <p>Precisa de suporte técnico, quer relatar uma falha ou exercer seus direitos de privacidade (LGPD)? Fale conosco via e-mail ou pelo formulário abaixo.</p>
+        <p><strong>E-mail Direto:</strong> <code>suporte@saldosimples.com</code></p>
       </section>
 
       <section class="card">
-        <h2>2. Dados Coletados</h2>
-        <ul class="info-list">
-          <li><strong>Dados da Conta:</strong> Endereço de e-mail e credenciais de acesso (armazenadas em formato hash seguro).</li>
-          <li><strong>Registros Financeiros:</strong> Lançamentos de receitas e despesas cadastrados por você no aplicativo.</li>
-          <li><strong>Logs Técnicos:</strong> Registros básicos de acesso (IP e user-agent) para proteção contra acessos indevidos e controle de taxa de requisições.</li>
-        </ul>
-      </section>
+        <h2>Envie sua Mensagem</h2>
+        <form class="app-form" action="#" method="POST" onsubmit="event.preventDefault(); alert('Mensagem enviada com sucesso!');">
+          <div class="form-group">
+            <label for="nome">Nome Completo</label>
+            <input type="text" id="nome" name="nome" class="form-input" required placeholder="Seu nome">
+          </div>
 
-      <section class="card">
-        <h2>3. Armazenamento e PWA</h2>
-        <p>Para garantir o uso sem internet, os dados são mantidos localmente no seu dispositivo através de <code>localStorage</code> e <code>Cache API</code>. Quando online, o aplicativo sincroniza os dados de forma segura com nossa infraestrutura Cloudflare D1.</p>
-      </section>
+          <div class="form-group">
+            <label for="email">E-mail de Contato</label>
+            <input type="email" id="email" name="email" class="form-input" required placeholder="seu@email.com">
+          </div>
 
-      <section class="card">
-        <h2>4. Direitos do Usuário (LGPD)</h2>
-        <p>Você pode a qualquer momento solicitar a confirmação, exportação (backup JSON) ou exclusão permanente dos seus dados pelo e-mail <code>suporte@saldosimples.com</code>.</p>
+          <div class="form-group">
+            <label for="assunto">Assunto</label>
+            <select id="assunto" name="assunto" class="form-input">
+              <option value="duvida">Dúvida Geral</option>
+              <option value="suporte">Suporte Técnico / Relatório de Bug</option>
+              <option value="lgpd">Privacidade / LGPD</option>
+              <option value="sugestao">Sugestão de Melhoria</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="mensagem">Mensagem</label>
+            <textarea id="mensagem" name="mensagem" class="form-input" required placeholder="Como podemos ajudar?"></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Enviar Mensagem</button>
+        </form>
       </section>
     </main>
 
     <footer class="app-footer">
       <nav class="footer-nav">
-        <a href="index.html">Início</a> &bull;
-        <a href="sobre.html">Sobre</a> &bull;
-        <a href="contato.html">Contato</a> &bull;
-        <a href="privacidade.html">Privacidade</a> &bull;
-        <a href="termos.html">Termos de Uso</a>
+        <a href="/index.html">Início</a> &bull;
+        <a href="/pages/sobre.html">Sobre</a> &bull;
+        <a href="/pages/contato.html">Contato</a> &bull;
+        <a href="/pages/privacidade.html">Privacidade</a> &bull;
+        <a href="/pages/termos.html">Termos de Uso</a>
       </nav>
       <p>&copy; 2026 Saldo Simples. Todos os direitos reservados.</p>
     </footer>
