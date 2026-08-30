@@ -36,15 +36,15 @@ O **Saldo Simples** é um web app (PWA) leve, minimalista e responsivo para cont
 
 ```text
 ├── assets/
-│   ├── css/style.css     # Estilos e variáveis de tema
-│   └── js/app.js         # Aplicação client-side e gerenciamento de estado
+│   ├── css/style.css           # Estilos e variáveis de tema
+│   └── js/app.js               # Aplicação client-side e gerenciamento de estado
 ├── worker/
-│   ├── index.js          # API REST do Worker (Auth + Sincronização)
-│   ├── schema.sql        # Esquema do banco de dados D1
-│   └── wrangler.toml     # Configuração do Cloudflare Workers
-├── index.html            # Interface web principal
-├── manifest.json         # Manifesto PWA
-└── sw.js                 # Service Worker para cache e PWA
+│   ├── index.js                # API REST do Worker (Auth + Sincronização)
+│   ├── schema.sql              # Esquema do banco de dados D1
+│   └── wrangler.example.toml   # Template de configuração do Cloudflare (Renomeie para wrangler.toml)
+├── index.html                  # Interface web principal
+├── manifest.json               # Manifesto PWA
+└── sw.js                       # Service Worker para cache e PWA
 ```
 
 ---

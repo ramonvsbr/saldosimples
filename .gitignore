@@ -2,6 +2,7 @@
 .wrangler/
 .wrangler/cache
 .dev.vars
+wrangler/wrangler.toml
 
 # Logs e arquivos do sistema
 *.log
